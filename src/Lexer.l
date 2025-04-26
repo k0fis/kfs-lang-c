@@ -31,6 +31,7 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 \n          { continue; }
 
 {LONG}      { sscanf(yytext, "%d", &yylval->lValue); return TOKEN_NUMBER; }
+{DOUBLE}    { sscanf(yytext, "%lf", &yylval->dValue); return TOKEN_DOUBLE; }
 "*"         { return TOKEN_STAR; }
 "+"         { return TOKEN_PLUS; }
 "-"         { return TOKEN_MINUS; }

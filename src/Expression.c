@@ -1,35 +1,43 @@
 #include "Expression.h"
 
 Expression *expression_new() {
-    Expression *b = (Expression *)malloc(sizeof(Expression));
-    if (b == NULL) return NULL;
-    b->type = eIntVALUE;
-    b->lValue = 0;
-    b->left = NULL;
-    b->right = NULL;
-    return b;
+  Expression *expression = (Expression *)malloc(sizeof(Expression));
+  if (expression == NULL) return NULL;
+  expression->type = eIntVALUE;
+  expression->lValue = 0;
+  expression->left = NULL;
+  expression->right = NULL;
+  return expression;
 }
 
 Expression *expression_create_integer(int value) {
-    Expression *b = expression_new();
-    if (b == NULL) return NULL;
-    b->type = eIntVALUE;
-    b->lValue = value;
-    return b;
+  Expression *expression = expression_new();
+  if (expression == NULL) return NULL;
+  expression->type = eIntVALUE;
+  expression->lValue = value;
+  return expression;
+}
+
+Expression *expression_create_double(double value) {
+  Expression *expression = expression_new();
+  if (expression == NULL) return NULL;
+  expression->type = eDoubleVALUE;
+  expression->dValue = value;
+  return expression;
 }
 
 Expression *expression_create_binary_operation(OperationType type, Expression *left, Expression *right) {
-    Expression *b = expression_new();
-    if (b == NULL) return NULL;
-    b->type = type;
-    b->left = left;
-    b->right = right;
-    return b;
+  Expression *expression = expression_new();
+  if (expression == NULL) return NULL;
+  expression->type = type;
+  expression->left = left;
+  expression->right = right;
+  return expression;
 }
 
-void expression_delete(Expression *b) {
-    if (b == NULL) return;
-    expression_delete(b->left);
-    expression_delete(b->right);
-    free(b);
+void expression_delete(Expression *expression) {
+    if (expression == NULL) return;
+    expression_delete(expression->left);
+    expression_delete(expression->right);
+    free(expression);
 }

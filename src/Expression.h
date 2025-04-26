@@ -31,6 +31,7 @@ typedef struct tagExpression
 } Expression;
 
 Expression *expression_create_integer(int value);
+Expression *expression_create_double(double value);
 
 Expression *expression_create_binary_operation(OperationType type, Expression *left, Expression *right);
 

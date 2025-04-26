@@ -35,6 +35,7 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 %token TOKEN_MOD      "%"
 %token TOKEN_POW      "^"
 %token <lValue> TOKEN_NUMBER "number"
+%token <dValue> TOKEN_DOUBLE "double"
 
 %type <expression> expr
 
@@ -63,6 +64,7 @@ expr
     | expr[L] "^" expr[R] { $$ = expression_create_binary_operation( ePOWER, $L, $R ); }
     | "(" expr[E] ")"     { $$ = $E; }
     | "number"            { $$ = expression_create_integer($1); }
+    | "double"            { $$ = expression_create_double($1); }
     ;
 
 %%

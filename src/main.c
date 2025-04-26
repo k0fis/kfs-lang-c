@@ -91,9 +91,12 @@ int main(void) {
     Expression *e = getAST(test);
     int result = evaluate(e);
     printf("Result of '%s' is %d\n", test, result);
+    expression_delete(e);
 
+    char test2[] = " /* ha */ 4 - 2*10 / 3.1*( 5 % 2  ) // hu ";
+    e = getAST(test2);
     Value *value = eval_value(e);
-    printf("EVAL: ");value_print(value);
+    printf("EVAL: %s: ", test2);value_print(value);
 
     value_delete(value);
     expression_delete(e);
