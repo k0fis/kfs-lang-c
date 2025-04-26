@@ -1,7 +1,7 @@
 
-FILES = Lexer.c Parser.c Expression.c main.c ../hashmap.c/hashmap.c rt/value.c rt/value_ops.c rt/eval.c
+FILES = Lexer.c Parser.c Expression.c main.c hashmap/hashmap.c rt/value.c rt/value_ops.c rt/eval.c
 CC = gcc
-CFLAGS = -g -I . -I ../hashmap.c -I rt -I../c-linked-list/src/linkedlist
+CFLAGS = -g -I . -I hashmap -I rt -I ll
 # gcc-> -fsanitize=leak -llsan
 # clang -  -fsanitize=address
 
