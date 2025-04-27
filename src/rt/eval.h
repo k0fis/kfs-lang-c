@@ -2,7 +2,7 @@
 #define _kfs_eval_h_
 
 #include "value.h"
-#include "Expression.h"
+#include "expression.h"
 
 #if defined(__cplusplus)
 extern "C" {

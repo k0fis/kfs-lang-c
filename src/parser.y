@@ -1,8 +1,8 @@
 %{
 
-#include "Expression.h"
-#include "Parser.h"
-#include "Lexer.h"
+#include "expression.h"
+#include "parser.h"
+#include "lexer.h"
 
 int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 
@@ -12,8 +12,8 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
   typedef void* yyscan_t;
 }
 
-%output  "Parser.c"
-%defines "Parser.h"
+%output  "../out/parser.c"
+%defines "../out/parser.h"
 
 %define api.pure
 %lex-param   { yyscan_t scanner }

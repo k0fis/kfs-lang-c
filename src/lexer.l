@@ -1,13 +1,13 @@
 %{
 
-#include "Expression.h"
-#include "Parser.h"
+#include "expression.h"
+#include "parser.h"
 
 #include <stdio.h>
 
 %}
 
-%option outfile="Lexer.c" header-file="Lexer.h"
+%option outfile="../out/lexer.c" header-file="../out/lexer.h"
 %option warn nodefault
 
 %option reentrant noyywrap never-interactive nounistd

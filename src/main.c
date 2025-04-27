@@ -1,6 +1,6 @@
-#include "Expression.h"
-#include "Parser.h"
-#include "Lexer.h"
+#include "expression.h"
+#include "parser.h"
+#include "lexer.h"
 #include "value.h"
 #include "eval.h"
 

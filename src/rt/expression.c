@@ -1,4 +1,4 @@
-#include "Expression.h"
+#include "expression.h"
 
 Expression *expression_new() {
   Expression *expression = (Expression *)malloc(sizeof(Expression));
