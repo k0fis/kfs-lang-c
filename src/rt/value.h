@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ll.h"
-#include "hashmap.h"
+#include "ll/ll.h"
+#include "hashmap/hashmap.h"
 
 #if defined(__cplusplus)
 extern "C" {

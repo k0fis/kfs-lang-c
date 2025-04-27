@@ -10,7 +10,7 @@ Value *value_plus(Value *left, Value *right) {
       return value_new_double(left->iValue + right->dValue);
     }
     if (right->type == String) {
-      sprintf(buffer, "%i", left->iValue);
+      snprintf(buffer, 50, "%i", left->iValue);
       char *ns = malloc(sizeof(char)*(1+strlen(buffer)+strlen(right->sValue)));
       ns[0] = '\0';
       strcat(ns, buffer);
@@ -26,7 +26,7 @@ Value *value_plus(Value *left, Value *right) {
       return value_new_double(left->dValue + right->dValue);
     }
     if (right->type == String) {
-      sprintf(buffer, "%lf", left->dValue);
+      snprintf(buffer, 50, "%lf", left->dValue);
       char *ns = malloc(sizeof(char)*(1+strlen(buffer)+strlen(right->sValue)));
       ns[0] = '\0';
       strcat(ns, buffer);
@@ -39,7 +39,7 @@ Value *value_plus(Value *left, Value *right) {
          return value_new_bool( left->iValue || right->iValue );
       }
       if (right->type == String) {
-         sprintf(buffer, "%s", right->iValue?"true":"false");
+         snprintf(buffer, 50, "%s", right->iValue?"true":"false");
          char *ns = malloc(strlen(buffer) + strlen(left->sValue)+1);
          ns[0] = '\0';
          strcat(ns, buffer);
@@ -50,13 +50,13 @@ Value *value_plus(Value *left, Value *right) {
   if (left->type == String) {
       buffer[0] = '\0';
       if (right->type == Int) {
-        sprintf(buffer, "%i", right->iValue);
+        snprintf(buffer, 50, "%i", right->iValue);
       }
       if (right->type == Double) {
-        sprintf(buffer, "%lf", right->dValue);
+        snprintf(buffer, 50, "%lf", right->dValue);
       }
       if (right->type == Bool) {
-        sprintf(buffer, "%s", right->iValue?"true":"false");
+        snprintf(buffer, 50, "%s", right->iValue?"true":"false");
       }
       if (strlen(buffer) > 0) {
         char *ns = malloc(strlen(buffer) + strlen(left->sValue)+1);

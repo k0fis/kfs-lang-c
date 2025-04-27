@@ -1,21 +1,21 @@
+OUT=../out
+FILES= main.c ${OUT}/lexer.c ${OUT}/parser.c hashmap/hashmap.c \
+		rt/expression.c rt/value.c rt/value_ops.c rt/eval.c
+CC= cc
+CFLAGS= -g -I. -Irt -I${OUT}
 
-FILES = ../out/lexer.c ../out/parser.c rt/expression.c main.c hashmap/hashmap.c rt/value.c rt/value_ops.c rt/eval.c
-CC = gcc
-CFLAGS = -g -I . -I hashmap -I rt -I ll -I../out
-# gcc-> -fsanitize=leak -llsan
-# clang -  -fsanitize=address
+test: $(FILES) ${OUT}
+	$(CC) $(CFLAGS) $(FILES) -o ${OUT}/kfsLang
+	${OUT}/kfsLang
 
-test: $(FILES)
-	mkdir -p ../out
-	$(CC) $(CFLAGS) $(FILES) -o ../out/kfsLang
-	rm -rf *.o *~ Lexer.c Lexer.h Parser.c Parser.h
-	../out/kfsLang
-
-lexer.c: lexer.l
+${OUT}/lexer.c: lexer.l ${OUT}
 	flex lexer.l
 
-parser.c: parser.y lexer.c
+${OUT}/parser.c: parser.y ${OUT} ${OUT}/lexer.c
 	bison parser.y
 
+${OUT}:
+	mkdir -p ../out
+
 clean:
-	rm -rf *.o *~ lexer.c lexer.h parser.c parser.h ../out/*
+	rm -rf ${OUT}/*

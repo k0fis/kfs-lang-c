@@ -2,6 +2,7 @@
 
 Value *eval_value(Expression *e) {
   Value *lv, *rv, *result;
+
   switch (e->type) {
     case eIntVALUE:
       return value_new_int(e->lValue);
