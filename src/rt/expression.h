@@ -9,14 +9,9 @@ extern "C" {
 
 typedef enum tagOperationType
 {
-    eIntVALUE,
-    eDoubleVALUE,
-    eMULTIPLY,
-    eADD,
-    eMINUS,
-    eDIVIDE,
-    eMODULO,
-    ePOWER
+    eIntVALUE, eDoubleVALUE, eBoolVALUE,
+    eMULTIPLY, eADD, eMINUS, eDIVIDE, eMODULO, ePOWER,
+    eLT, eLE, eEQ, eNE, eGT, eGE, eAND, eOR, eNOT
 } OperationType;
 
 typedef struct tagExpression
@@ -32,6 +27,7 @@ typedef struct tagExpression
 
 Expression *expression_create_integer(int value);
 Expression *expression_create_double(double value);
+Expression *expression_create_bool(int value);
 
 Expression *expression_create_binary_operation(OperationType type, Expression *left, Expression *right);
 

@@ -128,8 +128,6 @@ void value_delete(Value *value) {
    free(value);
 }
 
-void _value_print(Value *value, char *prefix, char *postfix);
-
 void _named_value_print(NamedValue *value, char *postfix) {
   char *name = malloc(sizeof(char)*( 3+strlen(value->name) ));
   name[0] = '\0';

@@ -1,7 +1,9 @@
 #include "value.h"
 
+#define BUFF_SIZE 50
+
 Value *value_plus(Value *left, Value *right) {
-  char buffer[50];
+  char buffer[BUFF_SIZE];
   if (left->type == Int) {
     if (right->type == Int) {
       return value_new_int(left->iValue + right->iValue);
@@ -10,7 +12,7 @@ Value *value_plus(Value *left, Value *right) {
       return value_new_double(left->iValue + right->dValue);
     }
     if (right->type == String) {
-      snprintf(buffer, 50, "%i", left->iValue);
+      snprintf(buffer, BUFF_SIZE, "%i", left->iValue);
       char *ns = malloc(sizeof(char)*(1+strlen(buffer)+strlen(right->sValue)));
       ns[0] = '\0';
       strcat(ns, buffer);
@@ -26,7 +28,7 @@ Value *value_plus(Value *left, Value *right) {
       return value_new_double(left->dValue + right->dValue);
     }
     if (right->type == String) {
-      snprintf(buffer, 50, "%lf", left->dValue);
+      snprintf(buffer, BUFF_SIZE, "%lf", left->dValue);
       char *ns = malloc(sizeof(char)*(1+strlen(buffer)+strlen(right->sValue)));
       ns[0] = '\0';
       strcat(ns, buffer);
@@ -39,7 +41,7 @@ Value *value_plus(Value *left, Value *right) {
          return value_new_bool( left->iValue || right->iValue );
       }
       if (right->type == String) {
-         snprintf(buffer, 50, "%s", right->iValue?"true":"false");
+         snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
          char *ns = malloc(strlen(buffer) + strlen(left->sValue)+1);
          ns[0] = '\0';
          strcat(ns, buffer);
@@ -50,13 +52,13 @@ Value *value_plus(Value *left, Value *right) {
   if (left->type == String) {
       buffer[0] = '\0';
       if (right->type == Int) {
-        snprintf(buffer, 50, "%i", right->iValue);
+        snprintf(buffer, BUFF_SIZE, "%i", right->iValue);
       }
       if (right->type == Double) {
-        snprintf(buffer, 50, "%lf", right->dValue);
+        snprintf(buffer, BUFF_SIZE, "%lf", right->dValue);
       }
       if (right->type == Bool) {
-        snprintf(buffer, 50, "%s", right->iValue?"true":"false");
+        snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
       }
       if (strlen(buffer) > 0) {
         char *ns = malloc(strlen(buffer) + strlen(left->sValue)+1);
@@ -155,6 +157,177 @@ Value *value_mod(Value *left, Value *right) {
     if (right->type == Int) {
       return value_new_int(left->iValue % right->iValue);
     }
+  }
+  return NULL;
+}
+
+Value *value_lt(Value *left, Value *right) {
+  if (left->type == Int) {
+    if (right->type == Int) {
+      return value_new_bool(left->iValue < right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->iValue < right->dValue);
+    }
+  }
+  if (left->type == Double) {
+    if (right->type == Int) {
+      return value_new_bool(left->dValue < right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->dValue < right->dValue);
+    }
+  }
+  return NULL;
+}
+
+Value *value_le(Value *left, Value *right) {
+  if (left->type == Int) {
+    if (right->type == Int) {
+      return value_new_bool(left->iValue <= right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->iValue <= right->dValue);
+    }
+  }
+  if (left->type == Double) {
+    if (right->type == Int) {
+      return value_new_bool(left->dValue <= right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->dValue <= right->dValue);
+    }
+  }
+  return NULL;
+}
+
+Value *value_eq(Value *left, Value *right) {
+  if (left->type == Int) {
+    if (right->type == Int) {
+      return value_new_bool(left->iValue == right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->iValue == right->dValue);
+    }
+  }
+  if (left->type == Double) {
+    if (right->type == Int) {
+      return value_new_bool(left->dValue == right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->dValue == right->dValue);
+    }
+  }
+  if ((left->type == Bool) && (right->type == Bool)) {
+    return value_new_bool(left->iValue == right->iValue);
+  }
+
+  if ((left->type == String) && (right->type == String)) {
+    return value_new_bool(!strcmp(left->sValue, right->sValue));
+  }
+  if ((left->type == List) && (right->type == List)) {
+    Value *inx = NULL, *iny = NULL;
+    int eq = 0;
+    //_value_print(left, " - cmp : ", " x"); value_print(right);
+    for (inx = list_entry((&left->lValue)->next, __typeof__(*inx), lValue),
+         iny = list_entry((&right->lValue)->next, __typeof__(*iny), lValue)
+        ;
+          (&(inx->lValue) != &(left->lValue)) && (&(iny->lValue) != &(right->lValue))
+        ;
+          inx = list_entry(inx->lValue.next, __typeof__(*inx), lValue),
+          iny = list_entry(iny->lValue.next, __typeof__(*iny), lValue)
+      ) {
+         //_value_print(inx, "- 1  ", " -"); value_print(iny);
+          Value *eqVal = value_eq(inx, iny);
+          eq = (eqVal->iValue)?1:0;
+          value_delete(eqVal);
+          if (!eq) break;
+    }
+    //printf("- 5 %i\n", eq);
+    if (!eq) return value_new_bool(0);
+    if ((&inx->lValue == &(left->lValue)) && (&iny->lValue == &(right->lValue))) {
+      // both list have same size
+      return value_new_bool(1);
+    }
+    return value_new_bool(0);
+  }
+  if ((left->type == Object) && (right->type == Object)) {
+
+      //return value_new_bool(left->iValue == right->iValue);
+  }
+
+  return NULL;
+}
+
+Value *value_ne(Value *left, Value *right) {
+  Value *ret = value_eq(left, right);
+  if (ret != NULL) {
+    ret->iValue = !ret->iValue;
+  }
+  return ret;
+}
+
+Value *value_gt(Value *left, Value *right) {
+  if (left->type == Int) {
+    if (right->type == Int) {
+      return value_new_bool(left->iValue > right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->iValue > right->dValue);
+    }
+  }
+  if (left->type == Double) {
+    if (right->type == Int) {
+      return value_new_bool(left->dValue > right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->dValue > right->dValue);
+    }
+  }
+  return NULL;
+}
+
+Value *value_ge(Value *left, Value *right) {
+  if (left->type == Int) {
+    if (right->type == Int) {
+      return value_new_bool(left->iValue >= right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->iValue >= right->dValue);
+    }
+  }
+  if (left->type == Double) {
+    if (right->type == Int) {
+      return value_new_bool(left->dValue >= right->iValue);
+    }
+    if (right->type == Double) {
+      return value_new_bool(left->dValue >= right->dValue);
+    }
+  }
+  return NULL;
+}
+
+Value *value_and(Value *left, Value *right) {
+  if (left->type == Bool) {
+    if (right->type == Bool) {
+      return value_new_int(left->iValue && right->iValue);
+    }
+  }
+  return NULL;
+}
+
+Value *value_or(Value *left, Value *right) {
+  if (left->type == Bool) {
+    if (right->type == Bool) {
+      return value_new_int(left->iValue || right->iValue);
+    }
+  }
+  return NULL;
+}
+
+Value *value_not(Value *left) {
+  if (left->type == Bool) {
+    return value_new_int(!left->iValue);
   }
   return NULL;
 }

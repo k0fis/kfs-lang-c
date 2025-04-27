@@ -32,6 +32,8 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 
 {LONG}      { sscanf(yytext, "%d", &yylval->lValue); return TOKEN_NUMBER; }
 {DOUBLE}    { sscanf(yytext, "%lf", &yylval->dValue); return TOKEN_DOUBLE; }
+"true"      { yylval->lValue = 1; return TOKEN_BOOL; }
+"false"     { yylval->lValue = 0; return TOKEN_BOOL; }
 "*"         { return TOKEN_STAR; }
 "+"         { return TOKEN_PLUS; }
 "-"         { return TOKEN_MINUS; }
@@ -40,6 +42,15 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "^"         { return TOKEN_POW; }
 "("         { return TOKEN_LPAREN; }
 ")"         { return TOKEN_RPAREN; }
+"<"         { return TOKEN_LT;  }
+"<="        { return TOKEN_LE;  }
+"=="        { return TOKEN_EQ;  }
+"!="        { return TOKEN_NE;  }
+">"         { return TOKEN_GT;  }
+">="        { return TOKEN_GE;  }
+"&&"        { return TOKEN_AND; }
+"||"        { return TOKEN_OR;  }
+"!"         { return TOKEN_NOT; }
 
 "/*"					BEGIN(comment);
 <comment>[^*\n]*

@@ -23,6 +23,7 @@ typedef enum tagValueType {
 
 typedef struct tagValue {
     ValueType type;
+
     int iValue; // Int && Bool -> 0 false, !0 true
     double dValue;
     char *sValue;
@@ -57,8 +58,19 @@ Value *value_divide(Value *left, Value *right);
 Value *value_mod(Value *left, Value *right);
 Value *value_power(Value *left, Value *right);
 
+Value *value_lt(Value *left, Value *right);
+Value *value_le(Value *left, Value *right);
+Value *value_eq(Value *left, Value *right);
+Value *value_ne(Value *left, Value *right);
+Value *value_gt(Value *left, Value *right);
+Value *value_ge(Value *left, Value *right);
+Value *value_and(Value *left, Value *right);
+Value *value_or(Value *left, Value *right);
+Value *value_not(Value *left);
+
 void value_print(Value *value);
 void named_value_print(NamedValue *value);
+void _value_print(Value *value, char *prefix, char *postfix);
 
 #if defined(__cplusplus)
 }

@@ -26,6 +26,14 @@ Expression *expression_create_double(double value) {
   return expression;
 }
 
+Expression *expression_create_bool(int value) {
+  Expression *expression = expression_new();
+  if (expression == NULL) return NULL;
+  expression->type = eBoolVALUE;
+  expression->lValue = value;
+  return expression;
+}
+
 Expression *expression_create_binary_operation(OperationType type, Expression *left, Expression *right) {
   Expression *expression = expression_new();
   if (expression == NULL) return NULL;

@@ -33,38 +33,9 @@ Expression *getAST(const char *expr)
     return expression;
 }
 
-int evaluate(Expression *e)
-{
-    switch (e->type) {
-        case eIntVALUE:
-            return e->lValue;
-        case eMULTIPLY:
-            return evaluate(e->left) * evaluate(e->right);
-        case eADD:
-            return evaluate(e->left) + evaluate(e->right);
-        case eMINUS:
-            return evaluate(e->left) - evaluate(e->right);
-        case eDIVIDE:
-            return evaluate(e->left) / evaluate(e->right);
-        case eMODULO:
-            return evaluate(e->left) % evaluate(e->right);
-        case ePOWER:
-            return evaluate(e->left) ^ evaluate(e->right);
-        default:
-            /* should not be here */
-            return 0;
-    }
-}
-
-
 
 int main(void) {
-  Value *v;
-   v = value_new_int(1); value_print(v); value_delete(v);
-   v = value_new_double(1); value_print(v); value_delete(v);
-   v = value_new_bool(1); value_print(v); value_delete(v);
-   v = value_new_bool(0); value_print(v); value_delete(v);
-   v = value_new_string("defo - 1"); value_print(v); value_delete(v);
+   Value *v, *w, *q;
    v = value_new_list();
    value_list_add(v, value_new_int(1));
    value_list_add(v, value_new_int(2));
@@ -86,18 +57,48 @@ int main(void) {
 
    v = value_new_list();value_print(v); value_delete(v);
 
+   w = value_new_int(1); q = value_new_double(1.);
+   v = value_eq(w,q);if (!v->iValue) printf("bad test eq"); value_delete(v);value_delete(w); value_delete(q);
+
+   w = value_new_string("pako"); q = value_new_string("pako");
+   v = value_eq(w,q); if (!v->iValue) printf("bad test string eq");; value_delete(v);value_delete(w); value_delete(q);
+
+   w = value_new_list(); q = value_new_list();
+   value_list_add(w, value_new_int(1));
+   value_list_add(w, value_new_int(1));
+   value_list_add(q, value_new_int(1));
+   value_list_add(q, value_new_int(1));
+   v = value_eq(w,q); if (!v->iValue) printf("bad test equals list eq");
+   value_delete(v);value_delete(w); value_delete(q);
+
+   w = value_new_list(); q = value_new_list();
+   value_list_add(w, value_new_int(1));
+   value_list_add(w, value_new_int(1));
+   value_list_add(q, value_new_int(2));
+   value_list_add(q, value_new_int(1));
+   v = value_eq(w,q);if (v->iValue) printf("bad test disjunct list eq"); value_delete(v);value_delete(w); value_delete(q);
+
+   w = value_new_list(); q = value_new_list();
+   value_list_add(w, value_new_int(1));
+   value_list_add(w, value_new_int(1));
+   value_list_add(q, value_new_int(1));
+   value_list_add(q, value_new_int(1));
+   value_list_add(q, value_new_int(1));
+   v = value_eq(w,q);if (v->iValue) printf("bad test list - different sizes eq"); value_delete(v);value_delete(w); value_delete(q);
+
+
 
     char test[] = " /* ha */ 4 - 2*10 / 3*( 5 % 2  ) // hu ";
     Expression *e = getAST(test);
-    int result = evaluate(e);
-    printf("Result of '%s' is %d\n", test, result);
+    Value *value = eval_value(e);
+    if (value->iValue != -2) { printf("BAD Result of '%s' is ", test); value_print(value); }
+    value_delete(value);
     expression_delete(e);
 
     char test2[] = " /* ha */ 4 - 2*10 / 3.1*( 5 % 2  ) // hu ";
     e = getAST(test2);
-    Value *value = eval_value(e);
+    value = eval_value(e);
     printf("EVAL: %s: ", test2);value_print(value);
-
     value_delete(value);
     expression_delete(e);
     return 0;
