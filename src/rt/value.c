@@ -3,7 +3,7 @@
 #define defaultPrefix  "  "
 
 Value *value_new(ValueType type) {
-  Value *value = (Value *)malloc(sizeof(Value));
+  KFS_MALLOC(Value, value);
   value->type = type;
   value->lValue.next = &value->lValue;
   value->lValue.prev = &value->lValue;
@@ -67,8 +67,45 @@ Value *value_new_object() {
   return value;
 }
 
+Value *value_copy(Value *value) {
+  if (value == NULL) {
+    KFS_ERROR("Cannot create copy of NULL");
+    return NULL;
+  }
+  Value *result, *inx;
+  size_t iter; void *item;
+  switch (value->type) {
+    case Bool:
+    case Int:
+      return value_new_int(value->iValue);
+    break;
+    case Double:
+      return value_new_double(value->dValue);
+    break;
+    case String:
+      return value_new_string(value->sValue);
+    break;
+    case List:
+      result = value_new_list();
+      inx = NULL; list_for_each_entry(inx, &value->lValue, lValue) {
+        value_list_add(result, value_copy(inx));
+      }
+      return result;
+    break;
+    case Object:
+       result = value_new_object();
+        iter = 0; while (hashmap_iter(value->oValue, &iter, &item)) {
+            value_object_add(result, ((NamedValue *)item)->name, value_copy(((NamedValue *)item)->value));
+        }
+      return result;
+    break;
+  }
+  KFS_ERROR("Error in copying values");
+  return NULL;
+}
+
 NamedValue *named_value_new(char *name, Value *value) {
-  NamedValue *nValue = (NamedValue *)malloc(sizeof(NamedValue));
+  KFS_MALLOC(NamedValue, nValue);
   nValue->name = strdup(name);
   nValue->value = value;
   return nValue;
@@ -88,12 +125,17 @@ int value_object_add(Value *obj, char *name, Value *val) {
   return 0;
 }
 
+Value *value_object_map_get(struct hashmap *map, char *name) {
+  NamedValue *found = (NamedValue *)hashmap_get(map, &(NamedValue){.name = name});
+  if (found != NULL) {
+    return found->value;
+  }
+  return NULL;
+}
+
 Value *value_object_get(Value *obj, char *name) {
   if (obj->type == Object) {
-    NamedValue *found = (NamedValue *)hashmap_get(obj->oValue, &(NamedValue){.name = name});
-    if (found != NULL) {
-      return found->value;
-    }
+    return value_object_map_get(obj->oValue, name);
   }
   return NULL;
 }
@@ -103,13 +145,32 @@ void named_value_delete(NamedValue *nv) {
     free(nv);
 }
 
-
 int value_list_add(Value *list, Value *value) {
   if (list->type != List) {
+    KFS_ERROR("Try add item into array, but expression is not array");
     return -1;
   }
   list_add_tail(&value->lValue, &list->lValue);
   return 0;
+}
+
+Value *value_list_get(Value *list, int index) {
+  if (index < 0) {
+    KFS_ERROR("Try to access out of bounds, index cannot be negative");
+    return NULL;
+  }
+  if (list->type != List) {
+    KFS_ERROR("Try add item into array, but expression is not array");
+    return NULL;
+  }
+  int iny = 0; Value *inx = NULL; list_for_each_entry(inx, &list->lValue, lValue) {
+     if (iny == index) {
+        return inx;
+     }
+     iny++;
+  }
+  KFS_ERROR("Try to access out of bounds");
+  return NULL;
 }
 
 void value_delete(Value *value) {
@@ -129,8 +190,7 @@ void value_delete(Value *value) {
 }
 
 void _named_value_print(NamedValue *value, char *postfix) {
-  char *name = malloc(sizeof(char)*( 3+strlen(value->name) ));
-  name[0] = '\0';
+  KFS_MALLOC_CHAR(name, 3+strlen(value->name) );
   strcat(name, value->name);
   strcat(name, ": ");
   _value_print(value->value, name, postfix);

@@ -13,8 +13,7 @@ Value *value_plus(Value *left, Value *right) {
     }
     if (right->type == String) {
       snprintf(buffer, BUFF_SIZE, "%i", left->iValue);
-      char *ns = malloc(sizeof(char)*(1+strlen(buffer)+strlen(right->sValue)));
-      ns[0] = '\0';
+      KFS_MALLOC_CHAR(ns, 1+strlen(buffer)+strlen(right->sValue));
       strcat(ns, buffer);
       strcat(ns, right->sValue);
       return value_new_string(ns);
@@ -29,8 +28,7 @@ Value *value_plus(Value *left, Value *right) {
     }
     if (right->type == String) {
       snprintf(buffer, BUFF_SIZE, "%lf", left->dValue);
-      char *ns = malloc(sizeof(char)*(1+strlen(buffer)+strlen(right->sValue)));
-      ns[0] = '\0';
+      KFS_MALLOC_CHAR(ns, 1+strlen(buffer)+strlen(right->sValue));
       strcat(ns, buffer);
       strcat(ns, right->sValue);
       return value_new_string(ns);
@@ -42,8 +40,7 @@ Value *value_plus(Value *left, Value *right) {
       }
       if (right->type == String) {
          snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
-         char *ns = malloc(strlen(buffer) + strlen(left->sValue)+1);
-         ns[0] = '\0';
+         KFS_MALLOC_CHAR(ns, strlen(buffer) + strlen(left->sValue)+1);
          strcat(ns, buffer);
          strcat(ns, right->sValue);
          return value_new_string(ns);
@@ -61,15 +58,13 @@ Value *value_plus(Value *left, Value *right) {
         snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
       }
       if (strlen(buffer) > 0) {
-        char *ns = malloc(strlen(buffer) + strlen(left->sValue)+1);
-        ns[0] = '\0';
+        KFS_MALLOC_CHAR(ns, strlen(buffer) + strlen(left->sValue)+1);
         strcat(ns, left->sValue);
         strcat(ns, buffer);
         return value_new_string(ns);
       }
       if (right->type == String) {
-        char *ns = malloc(strlen(right->sValue) + strlen(left->sValue)+1);
-        ns[0] = '\0';
+        KFS_MALLOC_CHAR(ns, strlen(right->sValue) + strlen(left->sValue)+1);
         strcat(ns, left->sValue);
         strcat(ns, right->sValue);
         return value_new_string(ns);
@@ -252,8 +247,22 @@ Value *value_eq(Value *left, Value *right) {
     return value_new_bool(0);
   }
   if ((left->type == Object) && (right->type == Object)) {
-
-      //return value_new_bool(left->iValue == right->iValue);
+    if (hashmap_count(left->oValue) != hashmap_count(right->oValue)) {
+      return value_new_bool(0);
+    }
+    int eq;
+    size_t iter = 0;
+    void *item;
+    while (hashmap_iter(left->oValue, &iter, &item)) {
+       NamedValue *itemx = (NamedValue *)item;
+       Value *itemy = value_object_map_get(right->oValue, itemx->name);
+       if (itemy == NULL) { eq = false; break; }
+       Value *eqVal = value_eq(itemx->value, itemy);
+       eq = eqVal->iValue;
+       value_delete(eqVal);
+       if (!eq) break;
+    }
+    return value_new_bool(eq);
   }
 
   return NULL;
@@ -310,7 +319,7 @@ Value *value_ge(Value *left, Value *right) {
 Value *value_and(Value *left, Value *right) {
   if (left->type == Bool) {
     if (right->type == Bool) {
-      return value_new_int(left->iValue && right->iValue);
+      return value_new_bool(left->iValue && right->iValue);
     }
   }
   return NULL;
@@ -319,7 +328,7 @@ Value *value_and(Value *left, Value *right) {
 Value *value_or(Value *left, Value *right) {
   if (left->type == Bool) {
     if (right->type == Bool) {
-      return value_new_int(left->iValue || right->iValue);
+      return value_new_bool(left->iValue || right->iValue);
     }
   }
   return NULL;
@@ -327,7 +336,7 @@ Value *value_or(Value *left, Value *right) {
 
 Value *value_not(Value *left) {
   if (left->type == Bool) {
-    return value_new_int(!left->iValue);
+    return value_new_bool(!left->iValue);
   }
   return NULL;
 }

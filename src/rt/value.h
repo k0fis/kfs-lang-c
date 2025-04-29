@@ -1,12 +1,7 @@
 #ifndef __VALUE_H__
 #define __VALUE_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "ll/ll.h"
-#include "hashmap/hashmap.h"
+#include "utils.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -43,13 +38,17 @@ Value *value_new_string(char *sValue);
 Value *value_new_list();
 Value *value_new_object();
 void value_delete(Value *value);
+Value *value_copy(Value *value);
 
 NamedValue *named_value_new(char *name, Value *value);
 void named_value_delete(NamedValue *nv);
 
 int value_list_add(Value *list, Value *value);
+Value *value_list_get(Value *list, int inx);
+
 int value_object_add(Value *obj, char *name, Value *val);
 Value *value_object_get(Value *obj, char *name);
+Value *value_object_map_get(struct hashmap *map, char *name);
 
 Value *value_plus(Value *left, Value *right);
 Value *value_minus(Value *left, Value *right);

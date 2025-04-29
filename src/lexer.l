@@ -1,6 +1,6 @@
 %{
 
-#include "expression.h"
+#include "utils.h"
 #include "parser.h"
 
 #include <stdio.h>
@@ -15,8 +15,8 @@
 
 IDENT   [a-zA-Z_][0-9a-zA-Z_]*
 DIGIT   [0-9]
-LONG   -?(0|[1-9][0-9]*)
-DOUBLE -?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?
+LONG    (0|[1-9][0-9]*)
+DOUBLE  (0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?
 
 ESCHAR  ("\\n")|("\\t")|("\\r")|("\\\\")|("\\\"")
 STRING_SQ  ("\'")(({ESCHAR})|([^\\\'\"]))*("\'")
@@ -32,8 +32,8 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 
 {LONG}      { sscanf(yytext, "%d", &yylval->lValue); return TOKEN_NUMBER; }
 {DOUBLE}    { sscanf(yytext, "%lf", &yylval->dValue); return TOKEN_DOUBLE; }
-"true"      { yylval->lValue = 1; return TOKEN_BOOL; }
-"false"     { yylval->lValue = 0; return TOKEN_BOOL; }
+"true"      { yylval->lValue = TRUE; return TOKEN_BOOL; }
+"false"     { yylval->lValue = FALSE; return TOKEN_BOOL; }
 "*"         { return TOKEN_STAR; }
 "+"         { return TOKEN_PLUS; }
 "-"         { return TOKEN_MINUS; }
@@ -51,6 +51,15 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "&&"        { return TOKEN_AND; }
 "||"        { return TOKEN_OR;  }
 "!"         { return TOKEN_NOT; }
+"["         { return TOKEN_LBRACK; }
+"]"         { return TOKEN_RBRACK; }
+","         { return TOKEN_COMA; }
+":"         { return TOKEN_COLON; }
+";"         { return TOKEN_SEMI; }
+"."         { return TOKEN_DOT; }
+"{"         { return TOKEN_LCURLY; }
+"}"         { return TOKEN_RCURLY; }
+{IDENT}     { strncpy(yylval->buffer, yytext, 255); return TOKEN_IDENT; }
 
 "/*"					BEGIN(comment);
 <comment>[^*\n]*
