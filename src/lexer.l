@@ -59,6 +59,7 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "."         { return TOKEN_DOT; }
 "{"         { return TOKEN_LCURLY; }
 "}"         { return TOKEN_RCURLY; }
+"int"       { return TOKEN_INT; }
 {IDENT}     { strncpy(yylval->buffer, yytext, 255); return TOKEN_IDENT; }
 
 "/*"					BEGIN(comment);

@@ -52,6 +52,7 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 %token TOKEN_COMA     ","
 %token TOKEN_COLON    ":"
 %token TOKEN_SEMI     ";"
+%token TOKEN_INT      "int"
 
 
 %token <lValue> TOKEN_NUMBER "number"
@@ -109,10 +110,11 @@ expr
               %prec "!"
     |         "-"  expr[L] { $$ = expression_create_binary_operation( eUNARY_MINUS, $L, NULL); }
               %prec "!"
-    | "(" expr[E] ")"             { $$ = $E; }
-    | "[" expr_list[E] "]"        { $$ = $E; }
-    | "{" named_list[E] "}"       { $$ = $E; }
-    | expr[L] "." "ID"[N]         { $$ = expression_create_dot_operation($L, $N); }
+    | "int" "(" expr[E] ")"  { $$ = expression_create_binary_operation( eINT, $E, NULL); }
+    | "(" expr[E] ")"        { $$ = $E; }
+    | "[" expr_list[E] "]"   { $$ = $E; }
+    | "{" named_list[E] "}"  { $$ = $E; }
+    | expr[L] "." "ID"[N]    { $$ = expression_create_dot_operation($L, $N); }
     | "number"            { $$ = expression_create_integer($1); }
     | "double"            { $$ = expression_create_double($1); }
     | "bool"              { $$ = expression_create_bool($1); }

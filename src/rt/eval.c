@@ -173,6 +173,25 @@ Value *eval_value(Expression *e) {
       }
       value_delete(lv);
       return result;
+    case eINT:
+      lv = eval_value(e->left);
+      switch (lv->type) {
+        case String:
+          KFS_ERROR("Cannot convert String into int");
+          return NULL;
+        case List:
+          KFS_ERROR("Cannot convert Array into int");
+          return NULL;
+        case Object:
+          KFS_ERROR("Cannot convert Object into int");
+          return NULL;
+        case Double:
+          lv->iValue = (int)lv->dValue;
+        case Bool:
+          lv->type = Int;
+        case Int: ;
+      }
+      return lv;
   }
   return NULL;
 }

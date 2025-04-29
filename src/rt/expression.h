@@ -12,7 +12,7 @@ typedef enum tagOperationType
     eIntVALUE, eDoubleVALUE, eBoolVALUE, eListVALUE, eObjectVALUE,
     eMULTIPLY, eADD, eMINUS, eDIVIDE, eMODULO, ePOWER, // 10
     eLT, eLE, eEQ, eNE, eGT, eGE, eAND, eOR, eNOT, eUNARY_MINUS, // 20
-    eDOT, eARRAY_ACCESS
+    eDOT, eARRAY_ACCESS, eINT
 } OperationType;
 
 typedef struct tagExpression {
