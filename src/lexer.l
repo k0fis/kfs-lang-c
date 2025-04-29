@@ -24,6 +24,7 @@ STRING_DQ  ("\"")(({ESCHAR})|([^\\\'\"]))*("\"")
 STRING  ({STRING_SQ})|({STRING_DQ})
 
 %x comment
+%x string
 
 %%
 "//"[^\n]*  { continue;  }
@@ -60,7 +61,8 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "{"         { return TOKEN_LCURLY; }
 "}"         { return TOKEN_RCURLY; }
 "int"       { return TOKEN_INT; }
-{IDENT}     { strncpy(yylval->buffer, yytext, 255); return TOKEN_IDENT; }
+{IDENT}     { strncpy(yylval->buffer, yytext, 1023); return TOKEN_IDENT; }
+{STRING}    { strncpy(yylval->buffer, yytext, 1023); return TOKEN_STR; }
 
 "/*"					BEGIN(comment);
 <comment>[^*\n]*

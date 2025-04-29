@@ -13,7 +13,7 @@
 #define FALSE (0)
 #define TRUE (!FALSE)
 
-#define KFS_INFO(str) fprintf(stdout, "INFO %s in %s:%i.\n", str, __FILE__, __LINE__);
+#define KFS_INFO(str) fprintf(stdout, "INFO %s \x1b[0;35m in %s:%i\x1b[0m.\n", str, __FILE__, __LINE__);
 #define KFS_ERROR(str) fprintf(stderr, "%s in %s:%i.\n" , str, __FILE__, __LINE__);
 
 #define KFS_MALLOC(type, ptr) \

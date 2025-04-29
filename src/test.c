@@ -8,13 +8,34 @@
 
 #include <math.h>
 
-char outputBuffer[256];
+#define buffer_len 1024
+char outputBuffer[buffer_len];
+
+void eval_s (char *code, char *result) {
+    Expression *e = eval_kfs_lang(code);
+    Value *value = eval_value(e);
+    if (value == NULL) {
+      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
+      KFS_ERROR(outputBuffer);
+      return;
+    }
+    if (value->type != String) {
+      KFS_ERROR("Bad result type");
+    } else {
+      if (strcmp(value->sValue, result)) {
+        snprintf(outputBuffer, buffer_len, "BAD result %s : %s x %s", code, value->sValue, result);
+        KFS_ERROR(outputBuffer);
+      }
+    }
+    value_delete(value);
+    expression_delete(e);
+}
 
 void eval_i (char *code, int result) {
     Expression *e = eval_kfs_lang(code);
     Value *value = eval_value(e);
     if (value == NULL) {
-      snprintf(outputBuffer, 255, "result is NULL for code : %s", code);
+      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
       return;
     }
@@ -33,7 +54,7 @@ void eval_b (char *code, int result) {
     Expression *e = eval_kfs_lang(code);
     Value *value = eval_value(e);
     if (value == NULL) {
-      snprintf(outputBuffer, 255, "result is NULL for code : %s", code);
+      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
       return;
     }
@@ -53,7 +74,7 @@ void eval_d(char *code, double result, double prec) {
     Expression *e = eval_kfs_lang(code);
     Value *value = eval_value(e);
     if (value == NULL) {
-      snprintf(outputBuffer, 255, "result is NULL for code : %s", code);
+      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
       return;
     }
@@ -72,7 +93,7 @@ void eval_l(char *code) {
     Expression *e = eval_kfs_lang(code);
     Value *value = eval_value(e);
     if (value == NULL) {
-      snprintf(outputBuffer, 255, "result is NULL for code : %s", code);
+      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
       return;
     }
@@ -90,12 +111,12 @@ void eval_o(char *code) {
   Expression *e = eval_kfs_lang(code);
   Value *value = eval_value(e);
   if (value == NULL) {
-      snprintf(outputBuffer, 255, "result is NULL for code : %s", code);
+      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
     return;
   }
   if (value->type != Object) {
-      snprintf(outputBuffer, 255, "%s - Bad result type : %i", code, value->type);
+      snprintf(outputBuffer, buffer_len, "%s - Bad result type : %i", code, value->type);
       KFS_ERROR(outputBuffer);
   } else {
     KFS_INFO("Object: "); value_print(value);
@@ -105,7 +126,7 @@ void eval_o(char *code) {
 }
 
 int main(void) {
-   KFS_INFO("start");
+   KFS_INFO("start test");
    Value *v, *w, *q;
    v = value_new_list();
    value_list_add(v, value_new_int(1));
@@ -160,11 +181,6 @@ int main(void) {
    value_list_add(q, value_new_int(1));
    v = value_eq(w,q);if (v->iValue) printf("bad test list - different sizes eq");
    value_delete(v);value_delete(w); value_delete(q);
-
-   eval_i(" /* ha */ 4 - 2*10 / 3*( 5 % 2  ) // hu ", -2);
-   eval_i(" 4-6 ", -2);
-   eval_i(" -3 ", -3);
-   eval_d(" /* ha */ 4 - 2*10 / 3.1*( 5 % 2  ) // hu ", -2.451613, 0.000001);
    eval_l("[]");
    eval_l("[1]");
    eval_l("[1, 2]");
@@ -182,4 +198,9 @@ int main(void) {
 
    eval_d(" [1.0, 2.0][1] ", 2, 0);
    eval_i("int( [1.0, {a : [2.0]}][1].a[0] -2) ", 0);
+
+   eval_s("  \"pr\"+\"d\" ", "prd");
+
+
+   KFS_INFO("end test");
 }

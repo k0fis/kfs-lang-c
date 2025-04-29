@@ -23,7 +23,7 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 %union {
     int  lValue;
     double dValue;
-    char buffer[256];
+    char buffer[1024];
     Expression *expression;
 }
 
@@ -54,11 +54,11 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 %token TOKEN_SEMI     ";"
 %token TOKEN_INT      "int"
 
-
 %token <lValue> TOKEN_NUMBER "number"
 %token <dValue> TOKEN_DOUBLE "double"
 %token <lValue> TOKEN_BOOL   "bool"
 %token <buffer> TOKEN_IDENT  "ID"
+%token <buffer> TOKEN_STR  "str"
 
 %type <expression> expr
 %type <expression> expr_list
@@ -108,16 +108,17 @@ expr
     | expr[L] "||" expr[R] { $$ = expression_create_binary_operation( eOR, $L, $R);  }
     |         "!"  expr[L] { $$ = expression_create_binary_operation( eNOT, $L, NULL); }
               %prec "!"
-    |         "-"  expr[L] { $$ = expression_create_binary_operation( eUNARY_MINUS, $L, NULL); }
+    |         "-"  expr[L]   { $$ = expression_create_binary_operation( eUNARY_MINUS, $L, NULL); }
               %prec "!"
     | "int" "(" expr[E] ")"  { $$ = expression_create_binary_operation( eINT, $E, NULL); }
     | "(" expr[E] ")"        { $$ = $E; }
     | "[" expr_list[E] "]"   { $$ = $E; }
     | "{" named_list[E] "}"  { $$ = $E; }
     | expr[L] "." "ID"[N]    { $$ = expression_create_dot_operation($L, $N); }
-    | "number"            { $$ = expression_create_integer($1); }
-    | "double"            { $$ = expression_create_double($1); }
-    | "bool"              { $$ = expression_create_bool($1); }
+    | "number"               { $$ = expression_create_integer($1); }
+    | "double"               { $$ = expression_create_double($1); }
+    | "bool"                 { $$ = expression_create_bool($1); }
+    | "str"                  { $$ = expression_create_string($1); }
     ;
 
 expr_list

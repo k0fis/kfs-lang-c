@@ -9,7 +9,7 @@ test: $(FILES) test.c ${OUT}
 	${OUT}/kfsLang
 
 ${OUT}/lexer.c: lexer.l ${OUT}
-	flex lexer.l
+	flex -s lexer.l
 
 ${OUT}/parser.c: parser.y ${OUT} ${OUT}/lexer.c
 	bison parser.y

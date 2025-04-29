@@ -42,6 +42,8 @@ Value *eval_value(Expression *e) {
       return value_new_double(e->dValue);
     case eBoolVALUE:
       return value_new_bool(e->lValue);
+    case eStringVALUE:
+      return value_new_string(e->str);
     case eListVALUE:
       lv = value_new_list();
       if (lv == NULL) {

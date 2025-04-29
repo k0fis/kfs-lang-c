@@ -35,6 +35,13 @@ Expression *expression_create_bool(int value) {
   return expression;
 }
 
+Expression *expression_create_string(char *value) {
+  Expression *expression = expression_new(eStringVALUE);
+  if (expression == NULL) return NULL;
+  expression->str = strndup(value+1, strlen(value)-2);
+  return expression;
+}
+
 Expression *expression_create_list() {
   Expression *expression = expression_new(eListVALUE);
   if (expression == NULL) return NULL;

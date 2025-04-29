@@ -9,9 +9,9 @@ extern "C" {
 
 typedef enum tagOperationType
 {
-    eIntVALUE, eDoubleVALUE, eBoolVALUE, eListVALUE, eObjectVALUE,
-    eMULTIPLY, eADD, eMINUS, eDIVIDE, eMODULO, ePOWER, // 10
-    eLT, eLE, eEQ, eNE, eGT, eGE, eAND, eOR, eNOT, eUNARY_MINUS, // 20
+    eIntVALUE, eDoubleVALUE, eBoolVALUE, eListVALUE, eObjectVALUE, eStringVALUE,
+    eMULTIPLY, eADD, eMINUS, eDIVIDE, eMODULO, ePOWER, // 11
+    eLT, eLE, eEQ, eNE, eGT, eGE, eAND, eOR, eNOT, eUNARY_MINUS, // 21
     eDOT, eARRAY_ACCESS, eINT
 } OperationType;
 
@@ -36,6 +36,7 @@ typedef struct tagNamedExpression {
 Expression *expression_create_integer(int value);
 Expression *expression_create_double(double value);
 Expression *expression_create_bool(int value);
+Expression *expression_create_string(char *value);
 Expression *expression_create_list();
 Expression *expression_create_object();
 
