@@ -28,14 +28,14 @@ void kfs_variables_delete(KfsVariables *kv) {
 
 KfsVarStack *kfs_var_stack_new(){
   KFS_MALLOC(KfsVarStack, kvs);
-  kfsVariables = kfs_variables_new();
+  kvs->kfsVariables = kfs_variables_new();
   KFS_LST_INIT(kvs->lst);
   return kvs;
 }
 
 void kfs_var_stack_delete(KfsVarStack *kvs) {
   kfs_variables_delete(kvs->kfsVariables);
-  KfsVarStack *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kv->lst, lst) {
+  KfsVarStack *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kvs->lst, lst) {
     list_del(&inx->lst);
     kfs_var_stack_delete(inx);
   }
@@ -52,6 +52,11 @@ KfsLangEnv *kfs_lang_env_new() {
   KFS_MALLOC(KfsLangEnv, env);
   env->expression = NULL;
   env->variables = kfs_var_stack_new();
+  env->useStringSysReplace = 1;
+  if (regcomp(&(env->stringSysReplace), "{{[^ }]+}}", REG_EXTENDED)) {
+    KFS_ERROR("Could not compile regex");
+    env->useStringSysReplace = 0;
+  }
   return env;
 }
 
@@ -60,11 +65,22 @@ void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv) {
     if (kfsLangEnv->expression != NULL) {
       expression_delete(kfsLangEnv->expression);
     }
+    regfree(&(kfsLangEnv->stringSysReplace));
     kfs_var_stack_delete(kfsLangEnv->variables);
     free(kfsLangEnv);
   }
 }
 
+Value *evalString(KfsLangEnv *env, char *value) {
+  int evalSys = value[0]=='"';
+  value+=1;value[strlen(value)-1] = '\0';
+  if (!evalSys || !env->useStringSysReplace) {
+    return value_new_string(value);
+  }
+  // system properties replace {{property_name}}
+
+  return value_new_string(value);
+}
 
 Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
   if (e == NULL) {
@@ -83,7 +99,7 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eBoolVALUE:
       return value_new_bool(e->lValue);
     case eStringVALUE:
-      return value_new_string(e->str);
+      return evalString(kfsLangEnv, e->str);
     case eListVALUE:
       lv = value_new_list();
       if (lv == NULL) {

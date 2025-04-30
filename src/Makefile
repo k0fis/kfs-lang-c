@@ -5,7 +5,12 @@ FILES= ${OUT}/lexer.c ${OUT}/parser.c hashmap/hashmap.c \
 CC= cc
 CFLAGS= -g -I. -Irt -I${OUT}
 
-test: $(FILES) test.c ${OUT}
+tst: ../test/pg.c
+	$(CC) $(CFLAGS) ../test/pg.c -o ${OUT}/tst
+	${OUT}/tst
+	rm -rf ${OUT}/tst*
+
+test: $(FILES) ../test/test.c ${OUT}
 	$(CC) $(CFLAGS) $(FILES) test.c -o ${OUT}/kfsLang
 	${OUT}/kfsLang
 

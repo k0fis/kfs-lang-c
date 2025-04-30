@@ -1,6 +1,8 @@
 #ifndef _kfs_lang_env_h
 #define _kfs_lang_env_h
 
+#include <regex.h>
+
 #include "hashmap/hashmap.h"
 #include "expression.h"
 #include "named_value.h"
@@ -22,6 +24,8 @@ typedef struct tagKfsVarStack {
 typedef struct tagKfsLangEnv {
    Expression *expression;
    KfsVarStack *variables;
+   regex_t stringSysReplace;
+   int useStringSysReplace;
 } KfsLangEnv;
 
 KfsLangEnv *kfs_lang_env_new();
