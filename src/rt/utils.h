@@ -37,8 +37,8 @@
   name.prev = &name
 
 #ifdef DEBUG
-  #define KFS_DEBUG(fmt, ...)  if (DEBUG) {fprintf(stdout, "\x1b[43mDEBUG:\x1b[0m"); fprintf(stdout, fmt, __VA_ARGS__); fprintf(stdout, " \x1b[0;35min %s:%i\x1b[0m\n", __FILE__, __LINE__); }
-  #define KFS_DEBUG_ML(fmt, ...)  if (DEBUG) {fprintf(stdout, "\x1b[43mDEBUG:\x1b[0m\n"); fprintf(stdout, fmt, __VA_ARGS__); fprintf(stdout, "\n\x1b[43mDEBUG info done:\x1b[0m\x1b[0;35min %s:%i\x1b[0m\n", __FILE__, __LINE__); }
+  #define KFS_DEBUG(fmt, ...)  if (DEBUG) {fprintf(stdout, "\x1b[43;30mDEBUG:\x1b[0m"); fprintf(stdout, fmt, __VA_ARGS__); fprintf(stdout, " \x1b[0;35min %s:%i\x1b[0m\n", __FILE__, __LINE__); }
+  #define KFS_DEBUG_ML(fmt, ...)  if (DEBUG) {fprintf(stdout, "\x1b[43;30mDEBUG:\x1b[0m\n"); fprintf(stdout, fmt, __VA_ARGS__); fprintf(stdout, "\n\x1b[43;30mDEBUG info done:\x1b[0m  \x1b[0;35min %s:%i\x1b[0m\n", __FILE__, __LINE__); }
 #else
   #define KFS_DEBUG(fmt, ...)
   #define KFS_DEBUG_ML(fmt, ...)

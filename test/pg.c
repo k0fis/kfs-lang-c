@@ -23,16 +23,28 @@ char * replace_system_props(regex_t regex, char *input) {
       }
       int outlen = strlen(output);
       int nameLen = (int)(match.rm_eo - match.rm_so)-4 + 1;
-      output = realloc(output, outlen + nameLen);
-      snprintf(output+outlen, nameLen, "%.*s", nameLen-1, cursor+match.rm_so+2);
+      KFS_MALLOC_CHAR(name, nameLen);
+      snprintf(name, nameLen, "%.*s", nameLen-1, cursor+match.rm_so+2);
+      char *replace = getenv(name);
+      KFS_DEBUG_ML("name: %s\nreplace: %s", name, replace);
+      free(name);
+      if (replace != NULL) {
+        output = realloc(output, outlen + strlen(replace)+1);
+        strcat(output, replace);
+      } else {
+        output = realloc(output, outlen + nameLen + 5);
+        sprintf(output+outlen,"{{%.*s}}", nameLen-1, cursor+match.rm_so+2);
+      }
 
       cursor += match.rm_eo;
       result = regexec(&regex, cursor, 1, &match, 0);
       if (result) {
-        int outlen = strlen(output);
         int len = strlen(cursor);
-        output = realloc(output, outlen + len + 1);
-        strcat(output,  cursor);
+        if (len > 0) {
+          int outlen = strlen(output);
+          output = realloc(output, outlen + len + 1);
+          strcat(output,  cursor);
+        }
         break;
       }
     }
@@ -53,7 +65,8 @@ int main() {
   if (result) {
     KFS_ERROR("Could not compile regex: %s", regextStr);
   } else {
-    char * input = "{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu}}{{napicu}}- debil";
+    setenv("napicu", "popici", 0);
+    char * input = "{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil";
     char *out = replace_system_props(regex, input);
     KFS_DEBUG_ML("input: %s\noutput: %s", input, out);
     free(out);
