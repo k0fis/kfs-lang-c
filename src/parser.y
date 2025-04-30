@@ -13,8 +13,8 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
   typedef void* yyscan_t;
 }
 
-%output  "../out/parser.c"
-%defines "../out/parser.h"
+%output  "out/parser.c"
+%defines "out/parser.h"
 
 %define api.pure
 %lex-param   { yyscan_t scanner }
