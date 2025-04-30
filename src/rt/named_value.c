@@ -58,7 +58,7 @@ void named_value_delete(NamedValue *nv) {
 }
 
 void _named_value_print(NamedValue *value, char *postfix) {
-  KFS_MALLOC_CHAR(name, 3+strlen(value->name) );
+  KFS_MALLOC_CHAR(name, (int)(3+strlen(value->name) ));
   strcat(name, value->name);
   strcat(name, ": ");
   _value_print(value->value, name, postfix);

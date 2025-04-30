@@ -8,22 +8,17 @@
 
 #include <math.h>
 
-#define buffer_len 1024
-char outputBuffer[buffer_len];
-
 void eval_s (KfsLangEnv *kfsLangEnv, char *code, char *result) {
     Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
-      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR("result is NULL for code : %s", code);
       return;
     }
     if (value->type != String) {
-      KFS_ERROR("Bad result type");
+      KFS_ERROR("Bad result type (%i)", value->type);
     } else {
       if (strcmp(value->sValue, result)) {
-        snprintf(outputBuffer, buffer_len, "BAD result %s : %s x %s", code, value->sValue, result);
-        KFS_ERROR(outputBuffer);
+        KFS_ERROR("BAD result %s : %s x %s", code, value->sValue, result);
       }
     }
     value_delete(value);
@@ -32,15 +27,14 @@ void eval_s (KfsLangEnv *kfsLangEnv, char *code, char *result) {
 void eval_i (KfsLangEnv *kfsLangEnv, char *code, int result) {
     Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
-      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR("result is NULL for code : %s", code);
       return;
     }
     if (value->type != Int) {
-      KFS_ERROR("Bad result type");
+      KFS_ERROR("Bad result type(%i)", value->type);
     } else {
       if (value->iValue != result) {
-        printf("BAD Result of '%s' defined: %i, but ", code, result); value_print(value);
+        KFS_ERROR("BAD Result of '%s' defined: %i, but ", code, result); value_print(value);
       }
     }
     value_delete(value);
@@ -49,16 +43,15 @@ void eval_i (KfsLangEnv *kfsLangEnv, char *code, int result) {
 void eval_b (KfsLangEnv *kfsLangEnv, char *code, int result) {
     Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
-      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR( "result is NULL for code : %s", code);
       return;
     }
     if (value->type != Bool) {
       KFS_INFO(code);
-      KFS_ERROR("Bad result type");
+      KFS_ERROR("Bad result type (%i)", value->type);
     } else {
       if ( ((!value->iValue) ^ (!result))) {
-        printf("BAD Result of '%s' defined: %s, but ", code, result?"true":"false"); value_print(value);
+        KFS_ERROR("BAD Result of '%s' defined: %s, but ", code, result?"true":"false"); value_print(value);
       }
     }
     value_delete(value);
@@ -67,15 +60,14 @@ void eval_b (KfsLangEnv *kfsLangEnv, char *code, int result) {
 void eval_d(KfsLangEnv *kfsLangEnv, char *code, double result, double prec) {
     Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
-      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR( "result is NULL for code : %s", code);
       return;
     }
     if (value->type != Double) {
-      KFS_ERROR("Bad result type");
+      KFS_ERROR("Bad result type(%i)", value->type);
     } else {
       if (fabs(value->dValue-result) > prec) {
-        printf("BAD Result of '%s' defined: %lf, but:  ", code, result); value_print(value);
+        KFS_ERROR("BAD Result of '%s' defined: %lf, but:  ", code, result); value_print(value);
       }
     }
     value_delete(value);
@@ -84,12 +76,11 @@ void eval_d(KfsLangEnv *kfsLangEnv, char *code, double result, double prec) {
 void eval_l(KfsLangEnv *kfsLangEnv, char *code) {
     Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
-      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR("result is NULL for code : %s", code);
       return;
     }
     if (value->type != List) {
-      KFS_ERROR("Bad result type");
+      KFS_ERROR("Bad result type(%i)", value->type);
     } else {
       KFS_INFO("Array: "); value_print(value);
     }
@@ -100,13 +91,11 @@ void eval_o(KfsLangEnv *kfsLangEnv, char *code) {
   KFS_INFO(code);
   Value *value = eval_kfs_lang(kfsLangEnv, code);
   if (value == NULL) {
-      snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR( "result is NULL for code : %s", code);
     return;
   }
   if (value->type != Object) {
-      snprintf(outputBuffer, buffer_len, "%s - Bad result type : %i", code, value->type);
-      KFS_ERROR(outputBuffer);
+      KFS_ERROR( "%s - Bad result type : %i", code, value->type);
   } else {
     KFS_INFO("Object: "); value_print(value);
   }

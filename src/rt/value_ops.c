@@ -14,7 +14,7 @@ Value *value_plus(Value *left, Value *right) {
     }
     if (right->type == String) {
       snprintf(buffer, BUFF_SIZE, "%i", left->iValue);
-      KFS_MALLOC_CHAR(ns, 1+strlen(buffer)+strlen(right->sValue));
+      KFS_MALLOC_CHAR(ns, (int)(1+strlen(buffer)+strlen(right->sValue)));
       strcat(ns, buffer);
       strcat(ns, right->sValue);
       return value_new_string(ns);
@@ -29,7 +29,7 @@ Value *value_plus(Value *left, Value *right) {
     }
     if (right->type == String) {
       snprintf(buffer, BUFF_SIZE, "%lf", left->dValue);
-      KFS_MALLOC_CHAR(ns, 1+strlen(buffer)+strlen(right->sValue));
+      KFS_MALLOC_CHAR(ns, (int)(1+strlen(buffer)+strlen(right->sValue)));
       strcat(ns, buffer);
       strcat(ns, right->sValue);
       return value_new_string(ns);
@@ -41,7 +41,7 @@ Value *value_plus(Value *left, Value *right) {
       }
       if (right->type == String) {
          snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
-         KFS_MALLOC_CHAR(ns, strlen(buffer) + strlen(left->sValue)+1);
+         KFS_MALLOC_CHAR(ns, (int)(strlen(buffer) + strlen(left->sValue)+1));
          strcat(ns, buffer);
          strcat(ns, right->sValue);
          return value_new_string(ns);
@@ -59,13 +59,13 @@ Value *value_plus(Value *left, Value *right) {
         snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
       }
       if (strlen(buffer) > 0) {
-        KFS_MALLOC_CHAR(ns, strlen(buffer) + strlen(left->sValue)+1);
+        KFS_MALLOC_CHAR(ns, (int)(strlen(buffer) + strlen(left->sValue)+1));
         strcat(ns, left->sValue);
         strcat(ns, buffer);
         return value_new_string(ns);
       }
       if (right->type == String) {
-        KFS_MALLOC_CHAR(ns, strlen(right->sValue) + strlen(left->sValue)+1);
+        KFS_MALLOC_CHAR(ns, (int)(strlen(right->sValue) + strlen(left->sValue)+1));
         strcat(ns, left->sValue);
         strcat(ns, right->sValue);
         return value_new_string(ns);

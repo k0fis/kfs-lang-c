@@ -53,8 +53,9 @@ KfsLangEnv *kfs_lang_env_new() {
   env->expression = NULL;
   env->variables = kfs_var_stack_new();
   env->useStringSysReplace = 1;
-  if (regcomp(&(env->stringSysReplace), "{{[^ }]+}}", REG_EXTENDED)) {
-    KFS_ERROR("Could not compile regex");
+  char *regexStr = "{{[^ }]+}}";
+  if (regcomp(&(env->stringSysReplace), regexStr, REG_EXTENDED)) {
+    KFS_ERROR("Could not compile regex: %s", regexStr);
     env->useStringSysReplace = 0;
   }
   return env;
@@ -103,7 +104,7 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eListVALUE:
       lv = value_new_list();
       if (lv == NULL) {
-        KFS_ERROR("Cannot obtain new LIST value");
+        KFS_ERROR("Cannot obtain new LIST value(%i)", 0);
         return NULL;
       }
       Expression *inx; list_for_each_entry(inx, &e->lst, lst) {
@@ -190,17 +191,17 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eDOT:
       lv = eval_value(kfsLangEnv, e->left);
       if (lv->type != Object) {
-        KFS_ERROR("Object access to non-object value");
+        KFS_ERROR("Object access to non-object value (%i)", lv->type);
         value_delete(lv);
         return NULL;
       }
       result = named_value_get(lv->oValue, e->str);
       if (result == NULL) {
-        KFS_ERROR("empty result");
+        KFS_ERROR("empty result", NULL);
       } else {
         result = value_copy(result);
         if (result == NULL) {
-          KFS_ERROR("Cannot create value copy");
+          KFS_ERROR("Cannot create value copy", NULL);
         }
       }
       value_delete(lv);
@@ -208,7 +209,7 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eARRAY_ACCESS:
       rv = eval_value(kfsLangEnv, e->right);
       if (rv->type != Int) {
-        KFS_ERROR("Array access - index type must be INT");
+        KFS_ERROR("Array access - index type must be INT (%i)", rv->type);
         value_delete(rv);
         return NULL;
       }
@@ -216,17 +217,17 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       value_delete(rv);
       lv = eval_value(kfsLangEnv, e->left);
       if (lv->type != List) {
-        KFS_ERROR("Array access to non-array value");
+        KFS_ERROR("Array access to non-array value (%i)", lv->type);
         value_delete(lv);
         return NULL;
       }
       result = value_list_get(lv, position);
       if (result == NULL) {
-        KFS_ERROR("empty value");
+        KFS_ERROR("empty value", NULL);
       } else {
         result = value_copy(result);
         if (result == NULL) {
-          KFS_ERROR("Cannot create value copy");
+          KFS_ERROR("Cannot create value copy", NULL);
         }
       }
       value_delete(lv);
@@ -235,13 +236,13 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       lv = eval_value(kfsLangEnv, e->left);
       switch (lv->type) {
         case String:
-          KFS_ERROR("Cannot convert String into int");
+          KFS_ERROR("Cannot convert String into int", NULL);
           return NULL;
         case List:
-          KFS_ERROR("Cannot convert Array into int");
+          KFS_ERROR("Cannot convert Array into int", NULL);
           return NULL;
         case Object:
-          KFS_ERROR("Cannot convert Object into int");
+          KFS_ERROR("Cannot convert Object into int", NULL);
           return NULL;
         case Double:
           lv->iValue = (int)lv->dValue;
@@ -259,12 +260,12 @@ Value *eval_kfs_lang(KfsLangEnv *kfsLangEnv, char *code) {
   YY_BUFFER_STATE state;
 
   if (yylex_init(&scanner)) {
-    KFS_ERROR("Cannot init yylex");
+    KFS_ERROR("Cannot init yylex", NULL);
     return NULL;
   }
   state = yy_scan_string(code, scanner);
   if (yyparse(kfsLangEnv, scanner)) {
-    KFS_ERROR("Cannot parse code");
+    KFS_ERROR("Cannot parse code", NULL);
     return NULL;
   }
   yy_delete_buffer(state, scanner);

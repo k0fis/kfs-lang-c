@@ -49,7 +49,7 @@ Value *value_new_object() {
 
 Value *value_copy(Value *value) {
   if (value == NULL) {
-    KFS_ERROR("Cannot create copy of NULL");
+    KFS_ERROR("Cannot create copy of (%p)", value);
     return NULL;
   }
   Value *result, *inx;
@@ -80,7 +80,7 @@ Value *value_copy(Value *value) {
       return result;
     break;
   }
-  KFS_ERROR("Error in copying values");
+  KFS_ERROR("Error in copying values, type: %i", value->type);
   return NULL;
 }
 
@@ -101,7 +101,7 @@ Value *value_object_get(Value *obj, char *name) {
 
 int value_list_add(Value *list, Value *value) {
   if (list->type != List) {
-    KFS_ERROR("Try add item into array, but expression is not array");
+    KFS_ERROR("Try add item into array, but expression is not array, but type = %i", list->type);
     return -1;
   }
   list_add_tail(&value->lValue, &list->lValue);
@@ -110,11 +110,11 @@ int value_list_add(Value *list, Value *value) {
 
 Value *value_list_get(Value *list, int index) {
   if (index < 0) {
-    KFS_ERROR("Try to access out of bounds, index cannot be negative");
+    KFS_ERROR("Try to access out of bounds, index cannot be negative (%i)", index);
     return NULL;
   }
   if (list->type != List) {
-    KFS_ERROR("Try add item into array, but expression is not array");
+    KFS_ERROR("Try add item into array, but expression is not array, type = %i", list->type);
     return NULL;
   }
   int iny = 0; Value *inx = NULL; list_for_each_entry(inx, &list->lValue, lValue) {
@@ -123,7 +123,7 @@ Value *value_list_get(Value *list, int index) {
      }
      iny++;
   }
-  KFS_ERROR("Try to access out of bounds");
+  KFS_ERROR("Try to access out of bounds(%i -> %i)", iny, index);
   return NULL;
 }
 

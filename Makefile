@@ -6,7 +6,7 @@ CC= cc
 CFLAGS= -g -Isrc -Isrc/rt -I${OUT}
 
 test-regex: test/pg.c
-	$(CC) $(CFLAGS) test/pg.c -o ${OUT}/tst
+	$(CC) $(CFLAGS) -DDEBUG test/pg.c -o ${OUT}/tst
 	${OUT}/tst
 	rm -rf ${OUT}/tst*
 

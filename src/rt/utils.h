@@ -14,20 +14,20 @@
 #define FALSE (0)
 #define TRUE (!FALSE)
 
-#define KFS_INFO(str) fprintf(stdout, "INFO %s \x1b[0;35m in %s:%i\x1b[0m.\n", str, __FILE__, __LINE__);
-#define KFS_ERROR(str) fprintf(stderr, "%s in %s:%i.\n" , str, __FILE__, __LINE__);
+#define KFS_INFO(str) fprintf(stdout, "\x1b[43mINFO\x1b[0m %s \x1b[0;35m in %s:%i\x1b[0m.\n", str, __FILE__, __LINE__);
+#define KFS_ERROR(fmt, ...) do { fprintf(stderr, fmt, __VA_ARGS__); fprintf(stderr, "in %s:%i\n", __FILE__, __LINE__); } while (0);
 
 #define KFS_MALLOC(type, ptr) \
   type * ptr; \
   if (NULL == (ptr = malloc(sizeof(type)))) { \
-    KFS_ERROR("Failed to allocate memory"); \
+    KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(ptr)); \
     return NULL; \
   }\
 
 #define KFS_MALLOC_CHAR(ptr, len) \
   char * ptr; \
-  if (NULL == (ptr = malloc(sizeof(char)*len))) { \
-    KFS_ERROR("Failed to allocate memory for char"); \
+  if (NULL == (ptr = malloc(sizeof(char)*(int)len))) { \
+    KFS_ERROR("Failed to allocate memory for char(%i)", (int)len); \
   } else { \
     ptr[0] = '\0';\
   } \
@@ -35,5 +35,13 @@
 #define KFS_LST_INIT(name) \
   name.next = &name; \
   name.prev = &name
+
+#ifdef DEBUG
+  #define KFS_DEBUG(fmt, ...)  if (DEBUG) {fprintf(stdout, "\x1b[43mDEBUG:\x1b[0m"); fprintf(stdout, fmt, __VA_ARGS__); fprintf(stdout, " \x1b[0;35min %s:%i\x1b[0m\n", __FILE__, __LINE__); }
+  #define KFS_DEBUG_ML(fmt, ...)  if (DEBUG) {fprintf(stdout, "\x1b[43mDEBUG:\x1b[0m\n"); fprintf(stdout, fmt, __VA_ARGS__); fprintf(stdout, "\n\x1b[43mDEBUG info done:\x1b[0m\x1b[0;35min %s:%i\x1b[0m\n", __FILE__, __LINE__); }
+#else
+  #define KFS_DEBUG(fmt, ...)
+  #define KFS_DEBUG_ML(fmt, ...)
+#endif
 
 #endif

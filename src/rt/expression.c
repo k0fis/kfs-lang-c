@@ -105,7 +105,7 @@ void expression_delete(Expression *expression) {
 
 Expression *expression_add_list_item(Expression *list, Expression *value) {
   if (list->type != eListVALUE) {
-    KFS_ERROR("Cannot add item into non list expression");
+    KFS_ERROR("Cannot add item into non list expression, type = %i", list->type);
   } else {
     list_add_tail(&value->lst, &list->lst);
   }
@@ -114,7 +114,7 @@ Expression *expression_add_list_item(Expression *list, Expression *value) {
 
 Expression *expression_add_object_item(Expression *object, char *name, Expression *value) {
   if (object->type != eObjectVALUE) {
-    KFS_ERROR("Cannot add item into non object");
+    KFS_ERROR("Cannot add item into non object(%s)", name);
     return object;
   }
   NamedExpression *found = (NamedExpression*)hashmap_get(object->object, &(NamedExpression){.name=name});
@@ -132,7 +132,7 @@ Expression *expression_add_object_item(Expression *object, char *name, Expressio
 
 Expression *expression_get_object_item(Expression *object, char *name, Expression *value) {
   if (object->type != eObjectVALUE) {
-    KFS_ERROR("Cannot get items from non object expressions");
+    KFS_ERROR("Cannot get items from non object expressions(%s)", name);
   } else {
     NamedExpression *ne = (NamedExpression*)hashmap_get(object->object, &(NamedExpression){.name=name});
     if (ne != NULL) {
