@@ -10,6 +10,7 @@
 #include "expression.h"
 #include "value.h"
 
+
 #define FALSE (0)
 #define TRUE (!FALSE)
 
@@ -30,5 +31,9 @@
   } else { \
     ptr[0] = '\0';\
   } \
+
+#define KFS_LST_INIT(name) \
+  name.next = &name; \
+  name.prev = &name
 
 #endif

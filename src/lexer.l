@@ -1,5 +1,6 @@
 %{
 
+#include "kfs_lang_env.h"
 #include "utils.h"
 #include "parser.h"
 
@@ -74,7 +75,7 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 
 %%
 
-int yyerror(Expression **expression, yyscan_t scanner, const char *msg) {
+int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg) {
     fprintf(stderr, "Error: %s\n", msg);
     return 0;
 }

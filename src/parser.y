@@ -1,10 +1,11 @@
 %{
 
+#include "kfs_lang_env.h"
 #include "utils.h"
 #include "parser.h"
 #include "lexer.h"
 
-int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
+int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 
 %}
 
@@ -17,7 +18,7 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 
 %define api.pure
 %lex-param   { yyscan_t scanner }
-%parse-param { Expression **expression }
+%parse-param { KfsLangEnv *kfsLangEnv }
 %parse-param { yyscan_t scanner }
 
 %union {
@@ -58,7 +59,7 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 %token <dValue> TOKEN_DOUBLE "double"
 %token <lValue> TOKEN_BOOL   "bool"
 %token <buffer> TOKEN_IDENT  "ID"
-%token <buffer> TOKEN_STR  "str"
+%token <buffer> TOKEN_STR    "str"
 
 %type <expression> expr
 %type <expression> expr_list
@@ -67,8 +68,8 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 /* Precedence (increasing) and associativity:
    a+b+c is (a+b)+c: left associativity
    a+b*c is a+(b*c): the precedence of "*" is higher than that of "+". */
-   %right "["
-   %right "]"
+%right "["
+%right "]"
 
 %left "+"
 %left "-"
@@ -87,7 +88,7 @@ int yyerror(Expression **expression, yyscan_t scanner, const char *msg);
 %%
 
 input
-    : expr { *expression = $1; }
+    : expr { kfsLangEnv->expression = $1; }
     ;
 
 expr

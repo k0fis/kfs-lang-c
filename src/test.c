@@ -1,8 +1,8 @@
 #include "expression.h"
+#include "kfs_lang_env.h"
 #include "parser.h"
 #include "lexer.h"
 #include "value.h"
-#include "eval.h"
 
 #include "utils.h"
 
@@ -11,9 +11,8 @@
 #define buffer_len 1024
 char outputBuffer[buffer_len];
 
-void eval_s (char *code, char *result) {
-    Expression *e = eval_kfs_lang(code);
-    Value *value = eval_value(e);
+void eval_s (KfsLangEnv *kfsLangEnv, char *code, char *result) {
+    Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
       snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
@@ -28,12 +27,10 @@ void eval_s (char *code, char *result) {
       }
     }
     value_delete(value);
-    expression_delete(e);
 }
 
-void eval_i (char *code, int result) {
-    Expression *e = eval_kfs_lang(code);
-    Value *value = eval_value(e);
+void eval_i (KfsLangEnv *kfsLangEnv, char *code, int result) {
+    Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
       snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
@@ -47,12 +44,10 @@ void eval_i (char *code, int result) {
       }
     }
     value_delete(value);
-    expression_delete(e);
 }
 
-void eval_b (char *code, int result) {
-    Expression *e = eval_kfs_lang(code);
-    Value *value = eval_value(e);
+void eval_b (KfsLangEnv *kfsLangEnv, char *code, int result) {
+    Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
       snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
@@ -67,12 +62,10 @@ void eval_b (char *code, int result) {
       }
     }
     value_delete(value);
-    expression_delete(e);
 }
 
-void eval_d(char *code, double result, double prec) {
-    Expression *e = eval_kfs_lang(code);
-    Value *value = eval_value(e);
+void eval_d(KfsLangEnv *kfsLangEnv, char *code, double result, double prec) {
+    Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
       snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
@@ -86,12 +79,10 @@ void eval_d(char *code, double result, double prec) {
       }
     }
     value_delete(value);
-    expression_delete(e);
 }
 
-void eval_l(char *code) {
-    Expression *e = eval_kfs_lang(code);
-    Value *value = eval_value(e);
+void eval_l(KfsLangEnv *kfsLangEnv, char *code) {
+    Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
       snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
@@ -103,13 +94,11 @@ void eval_l(char *code) {
       KFS_INFO("Array: "); value_print(value);
     }
     value_delete(value);
-    expression_delete(e);
 }
 
-void eval_o(char *code) {
+void eval_o(KfsLangEnv *kfsLangEnv, char *code) {
   KFS_INFO(code);
-  Expression *e = eval_kfs_lang(code);
-  Value *value = eval_value(e);
+  Value *value = eval_kfs_lang(kfsLangEnv, code);
   if (value == NULL) {
       snprintf(outputBuffer, buffer_len, "result is NULL for code : %s", code);
       KFS_ERROR(outputBuffer);
@@ -122,85 +111,33 @@ void eval_o(char *code) {
     KFS_INFO("Object: "); value_print(value);
   }
   value_delete(value);
-  expression_delete(e);
 }
 
 int main(void) {
+
    KFS_INFO("start test");
-   Value *v, *w, *q;
-   v = value_new_list();
-   value_list_add(v, value_new_int(1));
-   value_list_add(v, value_new_int(2));
-   value_list_add(v, value_new_double(2));
-   value_list_add(v, value_new_string("youda"));
-   value_print(v); //value_delete(v);
-   NamedValue *nv = named_value_new("youda", v);
-   printf("  ");named_value_print(nv); named_value_delete(nv);
+   KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
-   v = value_new_object();
-   value_object_add(v, "s", value_new_string("pica"));
-   value_object_add(v, "pako", value_new_bool(1));
-   value_object_add(v, "db1", value_new_double(1));
-   value_object_add(v, "db2", value_new_double(1));
-   value_object_add(v, "db3", value_new_double(2));
-   value_object_add(v, "db3", value_new_double(3));
-   value_object_add(v, "db3", value_new_double(4));
-   value_print(v); value_delete(v);
+   eval_l(kfsLangEnv, "[]");
+   eval_l(kfsLangEnv, "[1]");
+   eval_l(kfsLangEnv, "[1, 2]");
+   eval_l(kfsLangEnv, "[1, 2 , 3 ]");
 
-   v = value_new_list();value_print(v); value_delete(v);
+   eval_b(kfsLangEnv, " true", TRUE);
+   eval_b(kfsLangEnv, " false", FALSE);
 
-   w = value_new_int(1); q = value_new_double(1.);
-   v = value_eq(w,q);if (!v->iValue) printf("bad test eq");
-   value_delete(v);value_delete(w); value_delete(q);
+   eval_b(kfsLangEnv, " (5 != 3) && (3 > (2-5)) ", TRUE);
+   eval_b(kfsLangEnv, "3 <= (2+1) ", TRUE);
 
-   w = value_new_string("pako"); q = value_new_string("pako");
-   v = value_eq(w,q); if (!v->iValue) printf("bad test string eq");
-   value_delete(v);value_delete(w); value_delete(q);
+   eval_o(kfsLangEnv, " { a : 1 ; b: 12.0/3.1; c : (12+4)}  ");
+   eval_d(kfsLangEnv, " { a : 1 ; b: 12.0/3.1; c : (12+4)}.b  ", 3.87, 0.01);
 
-   w = value_new_list(); q = value_new_list();
-   value_list_add(w, value_new_int(1));
-   value_list_add(w, value_new_int(1));
-   value_list_add(q, value_new_int(1));
-   value_list_add(q, value_new_int(1));
-   v = value_eq(w,q); if (!v->iValue) printf("bad test equals list eq");
-   value_delete(v);value_delete(w); value_delete(q);
+   eval_d(kfsLangEnv, " [1.0, 2.0][1] ", 2, 0);
+   eval_i(kfsLangEnv, "int( [1.0, {a : [2.0]}][1].a[0] -2) ", 0);
 
-   w = value_new_list(); q = value_new_list();
-   value_list_add(w, value_new_int(1));
-   value_list_add(w, value_new_int(1));
-   value_list_add(q, value_new_int(2));
-   value_list_add(q, value_new_int(1));
-   v = value_eq(w,q);if (v->iValue) printf("bad test disjunct list eq");
-   value_delete(v);value_delete(w); value_delete(q);
-
-   w = value_new_list(); q = value_new_list();
-   value_list_add(w, value_new_int(1));
-   value_list_add(w, value_new_int(1));
-   value_list_add(q, value_new_int(1));
-   value_list_add(q, value_new_int(1));
-   value_list_add(q, value_new_int(1));
-   v = value_eq(w,q);if (v->iValue) printf("bad test list - different sizes eq");
-   value_delete(v);value_delete(w); value_delete(q);
-   eval_l("[]");
-   eval_l("[1]");
-   eval_l("[1, 2]");
-   eval_l("[1, 2 , 3 ]");
-
-   eval_b(" true", TRUE);
-   eval_b(" false", FALSE);
-
-   eval_b(" (5 != 3) && (3 > (2-5)) ", TRUE);
-   eval_b("3 <= (2+1) ", TRUE);
-
-   eval_o(" { a : 1 ; b: 12.0/3.1; c : (12+4)}  ");
-   eval_d(" { a : 1 ; b: 12.0/3.1; c : (12+4)}.b  ", 3.87, 0.01);
-   //eval_d(" 1.b  ", 3.87, 0.01);
-
-   eval_d(" [1.0, 2.0][1] ", 2, 0);
-   eval_i("int( [1.0, {a : [2.0]}][1].a[0] -2) ", 0);
-
-   eval_s("  \"pr\"+\"d\" ", "prd");
+   eval_s(kfsLangEnv, "  \"pr\"+\"d\" ", "prd");
 
 
    KFS_INFO("end test");
+   kfs_lang_env_delete(kfsLangEnv);
 }

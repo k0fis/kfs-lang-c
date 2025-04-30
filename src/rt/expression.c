@@ -38,7 +38,7 @@ Expression *expression_create_bool(int value) {
 Expression *expression_create_string(char *value) {
   Expression *expression = expression_new(eStringVALUE);
   if (expression == NULL) return NULL;
-  expression->str = strndup(value+1, strlen(value)-2);
+  expression->str = strdup(value);
   return expression;
 }
 

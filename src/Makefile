@@ -1,6 +1,7 @@
 OUT=../out
 FILES= ${OUT}/lexer.c ${OUT}/parser.c hashmap/hashmap.c \
-		rt/expression.c rt/value.c rt/value_ops.c rt/eval.c
+		rt/expression.c rt/value.c rt/value_ops.c rt/kfs_lang_env.c \
+		rt/named_value.c
 CC= cc
 CFLAGS= -g -I. -Irt -I${OUT}
 

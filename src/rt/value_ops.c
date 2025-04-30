@@ -1,4 +1,5 @@
 #include "value.h"
+#include "named_value.h"
 
 #define BUFF_SIZE 50
 
@@ -255,7 +256,7 @@ Value *value_eq(Value *left, Value *right) {
     void *item;
     while (hashmap_iter(left->oValue, &iter, &item)) {
        NamedValue *itemx = (NamedValue *)item;
-       Value *itemy = value_object_map_get(right->oValue, itemx->name);
+       Value *itemy = named_value_get(right->oValue, itemx->name);
        if (itemy == NULL) { eq = false; break; }
        Value *eqVal = value_eq(itemx->value, itemy);
        eq = eqVal->iValue;
