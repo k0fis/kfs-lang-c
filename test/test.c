@@ -18,7 +18,7 @@ void eval_s (KfsLangEnv *kfsLangEnv, char *code, char *result) {
       KFS_ERROR("Bad result type (%i)", value->type);
     } else {
       if (strcmp(value->sValue, result)) {
-        KFS_ERROR("BAD result %s : %s x %s", code, value->sValue, result);
+        KFS_ERROR("BAD result %s : %s x %s ", code, value->sValue, result);
       }
     }
     value_delete(value);
@@ -125,6 +125,9 @@ int main(void) {
    eval_i(kfsLangEnv, "int( [1.0, {a : [2.0]}][1].a[0] -2) ", 0);
 
    eval_s(kfsLangEnv, "  \"pr\"+'d' ", "prd");
+
+   setenv("napicu", "popici", 0);
+   eval_s(kfsLangEnv, " \"{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil\" ", "popici pako je defo a je to -popici- a nebo taky -{{napicu2}}popici- debil");
 
 
    KFS_INFO("end test");
