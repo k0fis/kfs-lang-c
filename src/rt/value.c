@@ -1,5 +1,4 @@
 #include "value.h"
-#include "named_value.h"
 
 #define defaultPrefix  "  "
 
@@ -43,7 +42,7 @@ Value *value_new_list(){
 
 Value *value_new_object() {
   Value *value = value_new(Object);
-  value->oValue = named_value_create_hashmap();
+  value->oValue = dict_new((element_free)value_delete);
   return value;
 }
 
@@ -73,10 +72,10 @@ Value *value_copy(Value *value) {
       return result;
     break;
     case Object:
-       result = value_new_object();
-        iter = 0; while (hashmap_iter(value->oValue, &iter, &item)) {
-            value_object_add(result, ((NamedValue *)item)->name, value_copy(((NamedValue *)item)->value));
-        }
+      result = value_new_object();
+      DictItem *iny; list_for_each_entry(iny, &value->oValue->lst, lst) {
+        value_object_add(result, strdup(iny->name), value_copy((Value*)iny->data));
+      }
       return result;
     break;
   }
@@ -88,13 +87,13 @@ int value_object_add(Value *obj, char *name, Value *val) {
   if (obj->type != Object) {
     return -2;
   }
-  named_value_set(obj->oValue, name, val);
+  dict_set(obj->oValue, name, val, KFS_DICT_SET_NORMAL);
   return 0;
 }
 
 Value *value_object_get(Value *obj, char *name) {
   if (obj->type == Object) {
-    return named_value_get(obj->oValue, name);
+    return dict_get(obj->oValue, name);
   }
   return NULL;
 }
@@ -138,51 +137,73 @@ void value_delete(Value *value) {
       }
    }
    if (value->type == Object) {
-      hashmap_free(value->oValue);
+      dict_delete(value->oValue);
    }
    free(value);
 }
 
-void _value_print(Value *value, char *prefix, char *postfix) {
+char *trim_str_buffer(char *buffer) {
+  return realloc(buffer, strlen(buffer)+1);
+}
+
+char *value_to_string(Value *value, int mode) {
   if (value == NULL) {
-    printf("%sNULL%s", prefix, postfix);
+    KFS_MALLOC_CHAR(tmp, 256);
+    snprintf(tmp, 255, "NULL");
+    return trim_str_buffer(tmp);
   } else {
     switch (value->type) {
-      case Int:
-        printf("%s%d%s", prefix, value->iValue, postfix);
-        break;
-      case Double:
-        printf("%s%lf%s", prefix, value->dValue, postfix);
-        break;
-      case Bool:
-        if (value->iValue) printf("%strue%s", prefix, postfix);
-        else printf("%sfalse%s", prefix, postfix);
-        break;
-      case String:
-        printf("%s\"%s\"%s", prefix, value->sValue, postfix);
-        break;
-      case List:
-        printf("%s[", prefix);
+      case Int: {
+        KFS_MALLOC_CHAR(tmp, 256);
+        snprintf(tmp, 255, "%i", value->iValue);
+        return trim_str_buffer(tmp);
+      }
+      case Double: {
+        KFS_MALLOC_CHAR(tmp, 256);
+        snprintf(tmp, 255, "%lf", value->dValue);
+        return trim_str_buffer(tmp);
+      }
+      case Bool: {
+        KFS_MALLOC_CHAR(tmp, 256);
+        snprintf(tmp, 255, "%s", value->iValue?"true":"false");
+        return trim_str_buffer(tmp);
+      }
+      case String: {
+        if (mode & VALUE_TO_STRING_STR_WITH_APOSTROPHE) {
+          KFS_MALLOC_CHAR(tmp, strlen(value->sValue)+3);
+          snprintf(tmp, strlen(value->sValue)+3, "'%s'", value->sValue);
+          return tmp;
+        } else {
+          return strdup(value->sValue);
+        }
+      }
+      case List: {
+        KFS_MALLOC_CHAR(ret, 2);
+        ret[0] = '['; ret[1]='\0';
         Value *inx = NULL; list_for_each_entry(inx, &value->lValue, lValue) {
-            _value_print(inx, " ", ",");
+          char *val = value_to_string(inx, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+          ret = realloc(ret, strlen(ret) + strlen(val)+2);
+          strcat(ret, val);
+          strcat(ret, ",");
+          free(val);
         }
-        printf("]%s", postfix);
-        break;
-      case Object:
-        printf("%s{", prefix);
-        size_t iter = 0;
-        void *item;
-        while (hashmap_iter(value->oValue, &iter, &item)) {
-            _named_value_print((NamedValue *)item, "; ");
+        ret[strlen(ret)-1] = ']';
+        return ret;
+      }
+      case Object: {
+        KFS_MALLOC_CHAR(ret,3);
+        strcat(ret, "{ ");
+        DictItem *inx; list_for_each_entry(inx, &value->oValue->lst, lst) {
+          ret = realloc(ret, strlen(ret)+strlen(inx->name)+3);
+          strcat(ret, inx->name); strcat(ret, ": ");
+          char *vStr = value_to_string((Value *)inx->data, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+          ret = realloc(ret, strlen(ret)+strlen(vStr)+3);
+          strcat(ret, vStr); strcat(ret, "; ");
+          free(vStr);
         }
-        printf("}%s", postfix);
-        break;
-      default:
-        printf("%s unknown %s", prefix, postfix);
+        return trim_str_buffer(ret);
+      }
     }
   }
 }
 
-void value_print(Value *value) {
-  _value_print(value, defaultPrefix, "\n");
-}

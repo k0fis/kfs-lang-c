@@ -1,17 +1,17 @@
 OUT=out
-FILES= ${OUT}/lexer.c ${OUT}/parser.c src/hashmap/hashmap.c \
+FILES= ${OUT}/lexer.c ${OUT}/parser.c  \
 		src/rt/expression.c src/rt/value.c src/rt/value_ops.c \
-		src/rt/kfs_lang_env.c src/rt/named_value.c
+		src/rt/kfs_lang_env.c src/rt/kfs_dict.c
 CC= cc
 CFLAGS= -g -Isrc -Isrc/rt -I${OUT}
 
-test-regex: test/pg.c src/rt/kfs_lang_env.c
+test-variables: test/pg.c src/rt/kfs_lang_env.c
 	$(CC) $(CFLAGS) $(FILES) -DDEBUG -DTRACE test/pg.c  -o ${OUT}/tst
-	${OUT}/tst
+	leaks -atExit -- ${OUT}/tst
 	rm -rf ${OUT}/tst*
 
 test-kfs-lang: $(FILES) test/test.c ${OUT}
-	$(CC) $(CFLAGS) $(FILES) -DDEBUG  test/test.c -o ${OUT}/kfsLang
+	$(CC) $(CFLAGS) $(FILES) -DDEBUG test/test.c -o ${OUT}/kfsLang
 	${OUT}/kfsLang
 
 ${OUT}/lexer.c: src/lexer.l ${OUT}

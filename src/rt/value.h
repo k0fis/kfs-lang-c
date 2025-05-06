@@ -2,6 +2,7 @@
 #define __VALUE_H__
 
 #include "utils.h"
+#include "kfs_dict.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -18,7 +19,7 @@ typedef struct tagValue {
     double dValue;
     char *sValue;
     ll_t lValue;
-    struct hashmap *oValue;
+    Dictionary *oValue;
 } Value;
 
 
@@ -55,8 +56,10 @@ Value *value_and(Value *left, Value *right);
 Value *value_or(Value *left, Value *right);
 Value *value_not(Value *left);
 
-void value_print(Value *value);
-void _value_print(Value *value, char *prefix, char *postfix);
+#define VALUE_TO_STRING_STR_DEFAULT 0
+#define VALUE_TO_STRING_STR_WITH_APOSTROPHE 0x1
+
+char *value_to_string(Value *value, int mode);
 
 #if defined(__cplusplus)
 }

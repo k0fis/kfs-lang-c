@@ -1,5 +1,6 @@
 %{
 
+#include "kfs_dict.h"
 #include "kfs_lang_env.h"
 #include "utils.h"
 #include "parser.h"

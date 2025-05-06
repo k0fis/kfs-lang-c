@@ -1,45 +1,123 @@
 #include "kfs_lang_env.h"
 #include "parser.h"
 #include "lexer.h"
-#include "named_value.h"
 
 //
-KfsVariables *kfs_variables_new() {
-  KFS_MALLOC(KfsVariables, kv);
-  KFS_LST_INIT(kv->lst);
-  kv->variables = named_value_create_hashmap();
+Variables *variables_new() {
+  KFS_MALLOC(Variables, kv);
+  KFS_LST_INIT(kv->lstVs);
+  kv->variables = dict_new((element_free)value_delete);
   return kv;
 }
 
-void kfs_variables_delete(KfsVariables *kv) {
-  hashmap_free(kv->variables);
-  KfsVariables *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kv->lst, lst) {
-    list_del(&inx->lst);
-    kfs_variables_delete(inx);
-  }
+void variables_delete(Variables *kv) {
+  KFS_TRACE("variables_delete - 1", NULL);
+  dict_delete(kv->variables);
+  KFS_TRACE("variables_delete - 2", NULL);
   free(kv);
+  KFS_TRACE("variables_delete - 3", NULL);
 }
 
-// add new vars -> new block -> new locals
-// remove block
-// get var -> all stack
+int variables_set(Variables *kv, char *name, Value *value, int mode) {
+  int ret = dict_set(kv->variables, name, value,
+      mode==VARIABLE_ADD_MODE_FORCE_ADD?KFS_DICT_SET_NORMAL:KFS_DICT_SET_DO_NOT_CREATE_NEW);
+  if (ret == KFS_DICT_SET_RET_OK) {
+    return VARIABLE_SET_RET_OK;
+  } else if (ret == KFS_DICT_SET_RET_NOT_SET) {
+    return VARIABLE_SET_RET_NOT_SET;
+  }
+  return VARIABLE_SET_RET_ERROR;
+}
+
+char *variables_to_string(Variables *kv){
+  KFS_MALLOC_CHAR(ret,3);
+  strcat(ret, "{ ");
+  DictItem *inx; list_for_each_entry(inx, &kv->variables->lst, lst) {
+    ret = realloc(ret, strlen(ret)+strlen(inx->name)+3);
+    strcat(ret, inx->name); strcat(ret, ": ");
+    char *vStr = value_to_string((Value *)inx->data, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+    ret = realloc(ret, strlen(ret)+strlen(vStr)+3);
+    strcat(ret, vStr); strcat(ret, "; ");
+    free(vStr);
+  }
+  if (strlen(ret) > 2) {
+    ret[strlen(ret)-2] = ' ';
+  }
+  ret[strlen(ret)-1] = '}';
+  return ret;
+}
 
 //
 
-KfsVarStack *kfs_var_stack_new(){
-  KFS_MALLOC(KfsVarStack, kvs);
-  kvs->kfsVariables = kfs_variables_new();
-  KFS_LST_INIT(kvs->lst);
+Variables *var_stack_add_variables(VarStack *vs) {
+  Variables *vars = variables_new();
+  list_add(&vars->lstVs, &vs->variablesStack);
+  return vars;
+}
+
+int var_stack_remove_variables(VarStack *vs) {
+  KFS_TRACE("var_stack_remove_variables - 1", NULL);
+  if (vs->variablesStack.next != &vs->variablesStack) {
+    KFS_TRACE("var_stack_remove_variables - 2", NULL);
+    Variables *inx = list_first_entry(&vs->variablesStack, Variables, lstVs);
+    KFS_TRACE("var_stack_remove_variables - 3", NULL);
+    list_del(&inx->lstVs);
+    KFS_TRACE("var_stack_remove_variables - 4", NULL);
+    variables_delete(inx);
+  }
+  KFS_TRACE("var_stack_remove_variables - 10", NULL);
+  return 0;
+}
+
+VarStack *var_stack_new(){
+  KFS_MALLOC(VarStack, kvs);
+  KFS_LST_INIT(kvs->variablesStack);
+  KFS_LST_INIT(kvs->lstEnv);
+  var_stack_add_variables(kvs);
   return kvs;
 }
 
-void kfs_var_stack_delete(KfsVarStack *kvs) {
-  kfs_variables_delete(kvs->kfsVariables);
-  KfsVarStack *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kvs->lst, lst) {
-    list_del(&inx->lst);
-    kfs_var_stack_delete(inx);
+void var_stack_delete(VarStack *kvs) {
+  int traceInx = 0;
+  Variables *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kvs->variablesStack, lstVs) {
+    list_del(&inx->lstVs);
+    variables_delete(inx);
   }
   free(kvs);
+}
+
+int var_stack_set(VarStack *vs, char *name, Value *value) {
+  Variables *inx; list_for_each_entry(inx, &vs->variablesStack, lstVs) {
+    if (variables_set(inx, name, value, VARIABLE_ADD_MODE_ADD_ONLY_OVERRIDE) == VARIABLE_SET_RET_OK) {
+      return VARIABLE_SET_RET_OK;
+    }
+  }
+  inx = list_first_entry(&vs->variablesStack, Variables, lstVs);
+  if (inx == NULL) {
+    KFS_ERROR("Bas Var stack state!", NULL);
+    return VARIABLE_SET_RET_NOT_SET;
+  }
+  if (variables_set(inx, name, value, VARIABLE_ADD_MODE_FORCE_ADD) == VARIABLE_SET_RET_OK) {
+    return VARIABLE_SET_RET_OK;
+  }
+  KFS_ERROR("Cannot set variable %s!", name);
+  return VARIABLE_SET_RET_NOT_SET;
+}
+
+char *var_stack_to_string(VarStack *vs) {
+  KFS_MALLOC_CHAR(ret, 2);
+  strcat(ret, "[ ");
+  Variables *inx; list_for_each_entry(inx, &vs->variablesStack, lstVs) {
+    char *vStr = variables_to_string(inx);
+    ret = realloc(ret, strlen(ret)+strlen(vStr) + 3);
+    strcat(ret, vStr); strcat(ret, ", ");
+    free(vStr);
+  }
+  if (strlen(ret) > 2) {
+    ret[strlen(ret)-2] = ' ';
+  }
+  ret[strlen(ret)-1] = ']';
+  return ret;
 }
 
 // add new var stack -> call fce
@@ -50,14 +128,15 @@ void kfs_var_stack_delete(KfsVarStack *kvs) {
 
 KfsLangEnv *kfs_lang_env_new() {
   KFS_MALLOC(KfsLangEnv, env);
+  KFS_LST_INIT(env->variablesStack);
   env->expression = NULL;
-  env->variables = kfs_var_stack_new();
   env->useStringSysReplace = 1;
   char *regexStr = "{{[^ }]+}}";
   if (regcomp(&(env->stringSysReplace), regexStr, REG_EXTENDED)) {
     KFS_ERROR("Could not compile regex: %s", regexStr);
     env->useStringSysReplace = 0;
   }
+  kfs_lang_env_add_space(env);
   return env;
 }
 
@@ -67,10 +146,44 @@ void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv) {
       expression_delete(kfsLangEnv->expression);
     }
     regfree(&(kfsLangEnv->stringSysReplace));
-    kfs_var_stack_delete(kfsLangEnv->variables);
+    VarStack *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kfsLangEnv->variablesStack, lstEnv) {
+      list_del(&inx->lstEnv);
+      var_stack_delete(inx);
+    }
     free(kfsLangEnv);
   }
 }
+
+VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv) {
+  VarStack *vs = var_stack_new();
+  if (vs == NULL) {
+    KFS_ERROR("Cannot initialize new VarStack", NULL);
+    return NULL;
+  }
+  list_add(&vs->lstEnv, &kfsLangEnv->variablesStack);
+  return vs;
+}
+
+void kfs_lang_env_remove_space(KfsLangEnv *kfsLangEnv) {
+  if (kfsLangEnv->variablesStack.next != &kfsLangEnv->variablesStack) {
+    VarStack *lastVs = list_first_entry(&kfsLangEnv->variablesStack, VarStack, lstEnv);
+    list_del(&lastVs->lstEnv);
+    var_stack_delete(lastVs);
+  } else {
+    KFS_ERROR("Cannot remove last VSStack, its empty!", NULL);
+  }
+}
+
+void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv) {
+
+}
+
+void kfs_lang_env_space_del_vars(KfsLangEnv *kfsLangEnv) {
+
+}
+
+
+/////////
 
 char *replace_system_props(regex_t regex, char *input) {
   KFS_TRACE("start replace_system_props('%s')", input);
@@ -130,10 +243,10 @@ char *replace_system_props(regex_t regex, char *input) {
 Value *evalString(KfsLangEnv *env, char *value) {
   int evalSys = value[0]=='"';
   value+=1;value[strlen(value)-1] = '\0';
-  if (!evalSys || !env->useStringSysReplace) {
-    return value_new_string(value);
-  }
-  return value_new_string(replace_system_props(env->stringSysReplace, value));
+  KFS_TRACE("evalString: %i && %i = %i", env->useStringSysReplace, evalSys, env->useStringSysReplace && evalSys);
+  if (env->useStringSysReplace && evalSys)
+    return value_new_string(replace_system_props(env->stringSysReplace, value));
+  return value_new_string(value);
 }
 
 Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
@@ -141,7 +254,6 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     return NULL;
   }
   Value *lv, *rv, *result;
-  NamedExpression *ne;
   Expression *expr;
   int iny;
 
@@ -166,11 +278,8 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       return lv;
     case eObjectVALUE:
       lv = value_new_object();
-      size_t iter = 0;
-      void *item;
-      while (hashmap_iter(e->object, &iter, &item)) {
-        NamedExpression *ne = (NamedExpression*)item;
-        value_object_add(lv, ne->name, eval_value(kfsLangEnv, ne->expression));
+      DictItem *iny; list_for_each_entry(iny, &e->object->lst, lst) {
+        value_object_add(lv, iny->name, eval_value(kfsLangEnv, (Expression *)iny->data));
       }
       return lv;
     case eMULTIPLY:
@@ -248,7 +357,7 @@ Value *eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
         value_delete(lv);
         return NULL;
       }
-      result = named_value_get(lv->oValue, e->str);
+      result = (Value *)dict_get(lv->oValue, e->str);
       if (result == NULL) {
         KFS_ERROR("empty result", NULL);
       } else {

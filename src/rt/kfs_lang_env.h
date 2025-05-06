@@ -3,33 +3,49 @@
 
 #include <regex.h>
 
-#include "hashmap/hashmap.h"
+#include "kfs_dict.h"
 #include "expression.h"
-#include "named_value.h"
+#include "value.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif  // __cplusplus
 
-typedef struct tagKfsVariables {
-  struct hashmap *variables;
-  ll_t lst;
-} KfsVariables;
+typedef struct tagVariables {
+  Dictionary *variables;
+  ll_t lstVs; // list toggler for Variables in stack/list
+} Variables;
 
-typedef struct tagKfsVarStack {
-  KfsVariables *kfsVariables;
-  ll_t lst;
-} KfsVarStack;
+#define VARIABLE_SET_RET_OK       0
+#define VARIABLE_SET_RET_ERROR   -1
+#define VARIABLE_SET_RET_NOT_SET  1
+
+#define VARIABLE_ADD_MODE_FORCE_ADD 1
+#define VARIABLE_ADD_MODE_ADD_ONLY_OVERRIDE 0
+
+char *variables_to_string(Variables *kv);
+
+typedef struct tagVarStack {
+  ll_t variablesStack;  // head of Variables
+  ll_t lstEnv; // stack toggle for list in Kfs Env Lang
+} VarStack;
+
+char *var_stack_to_string(VarStack *vs);
 
 typedef struct tagKfsLangEnv {
    Expression *expression;
-   KfsVarStack *variables;
+   ll_t variablesStack; // head of VarStack
    regex_t stringSysReplace;
    int useStringSysReplace;
 } KfsLangEnv;
 
 KfsLangEnv *kfs_lang_env_new();
 void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv);
+VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv);
+void kfs_lang_env_remove_space(KfsLangEnv *kfsLangEnv);
+
+void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv);
+void kfs_lang_env_space_del_vars(KfsLangEnv *kfsLangEnv);
 
 Value *eval_kfs_lang(KfsLangEnv *kfsLangEnv, char *code);
 

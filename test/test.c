@@ -8,20 +8,26 @@
 
 #include <math.h>
 
-void eval_s (KfsLangEnv *kfsLangEnv, char *code, char *result) {
+#define CE(name, res) if (res) { KFS_DEBUG("%s : %i", name, res); return res; }
+
+int eval_s (KfsLangEnv *kfsLangEnv, char *code, char *expected) {
+    int ret = 0;
     Value *value = eval_kfs_lang(kfsLangEnv, code);
     if (value == NULL) {
       KFS_ERROR("result is NULL for code : %s", code);
-      return;
+      return -1;
     }
     if (value->type != String) {
       KFS_ERROR("Bad result type (%i)", value->type);
+      ret = -2;
     } else {
-      if (strcmp(value->sValue, result)) {
-        KFS_ERROR("BAD result %s : %s x %s ", code, value->sValue, result);
+      if (strcmp(value->sValue, expected)) {
+        KFS_ERROR("BAD result for code: %s : result: <%s>  expected: <%s> ", code, value->sValue, expected);
+        ret = -3;
       }
     }
     value_delete(value);
+    return ret;
 }
 
 void eval_i (KfsLangEnv *kfsLangEnv, char *code, int result) {
@@ -124,10 +130,11 @@ int main(void) {
    eval_d(kfsLangEnv, " [1.0, 2.0][1] ", 2, 0);
    eval_i(kfsLangEnv, "int( [1.0, {a : [2.0]}][1].a[0] -2) ", 0);
 
-   eval_s(kfsLangEnv, "  \"pr\"+'d' ", "prd");
+   CE("string", eval_s(kfsLangEnv, "  \"pr\"+'d' ", "prd"));
 
    setenv("napicu", "popici", 0);
-   eval_s(kfsLangEnv, " \"{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil\" ", "popici pako je defo a je to -popici- a nebo taky -{{napicu2}}popici- debil");
+   CE("string with replace sys env", eval_s(kfsLangEnv, " \"{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil\" ", "popici pako je defo a je to -popici- a nebo taky -{{napicu2}}popici- debil"));
+   CE("string w/o replace sys", eval_s(kfsLangEnv, " '{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil' ", "{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil"));
 
 
    KFS_INFO("end test");

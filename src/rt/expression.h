@@ -1,6 +1,7 @@
 #ifndef __EXPRESSION_H__
 #define __EXPRESSION_H__
 
+#include "kfs_dict.h"
 #include "utils.h"
 
 #if defined(__cplusplus)
@@ -21,17 +22,12 @@ typedef struct tagExpression {
   int lValue;
   double dValue;
   ll_t lst;
-  struct hashmap *object;
+  Dictionary *object;
   char *str;
 
   struct tagExpression *left;
   struct tagExpression *right;
 } Expression;
-
-typedef struct tagNamedExpression {
-  char *name;
-  Expression *expression;
-} NamedExpression;
 
 Expression *expression_create_integer(int value);
 Expression *expression_create_double(double value);

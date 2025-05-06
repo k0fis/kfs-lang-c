@@ -1,5 +1,4 @@
 #include "value.h"
-#include "named_value.h"
 
 #define BUFF_SIZE 50
 
@@ -248,17 +247,14 @@ Value *value_eq(Value *left, Value *right) {
     return value_new_bool(0);
   }
   if ((left->type == Object) && (right->type == Object)) {
-    if (hashmap_count(left->oValue) != hashmap_count(right->oValue)) {
+    if (dict_count(left->oValue) != dict_count(right->oValue)) {
       return value_new_bool(0);
     }
     int eq;
-    size_t iter = 0;
-    void *item;
-    while (hashmap_iter(left->oValue, &iter, &item)) {
-       NamedValue *itemx = (NamedValue *)item;
-       Value *itemy = named_value_get(right->oValue, itemx->name);
-       if (itemy == NULL) { eq = false; break; }
-       Value *eqVal = value_eq(itemx->value, itemy);
+    DictItem *inx; list_for_each_entry(inx, &left->oValue->lst, lst) {
+       Value *itemy = dict_get(right->oValue, inx->name);
+       if (itemy == NULL) { eq = 0; break; }
+       Value *eqVal = value_eq((Value *)inx->data, itemy);
        eq = eqVal->iValue;
        value_delete(eqVal);
        if (!eq) break;
