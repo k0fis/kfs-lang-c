@@ -5,12 +5,12 @@ FILES= ${OUT}/lexer.c ${OUT}/parser.c  \
 CC= cc
 CFLAGS= -g -Isrc -Isrc/rt -I${OUT}
 
-test-variables: test/pg.c src/rt/kfs_lang_env.c
+test-variables: ${OUT}
 	$(CC) $(CFLAGS) $(FILES) -DDEBUG -DTRACE test/pg.c  -o ${OUT}/tst
 	leaks -atExit -- ${OUT}/tst
 	rm -rf ${OUT}/tst*
 
-test-kfs-lang: $(FILES) test/test.c ${OUT}
+test-kfs-lang: ${OUT}
 	$(CC) $(CFLAGS) $(FILES) -DDEBUG test/test.c -o ${OUT}/kfsLang
 	${OUT}/kfsLang
 

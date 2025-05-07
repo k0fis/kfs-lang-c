@@ -18,22 +18,14 @@ Dictionary *dict_new(element_free elfree) {
 }
 
 void dict_delete(Dictionary *dict) {
-  KFS_TRACE("variables_delete - 1", NULL);
   if (dict != NULL) {
-    KFS_TRACE("variables_delete - 2", NULL);
     DictItem *inx, *tmp; list_for_each_entry_safe(inx, tmp, &dict->lst, lst) {
-      KFS_TRACE("variables_delete - 21", NULL);
       list_del(&inx->lst);
-      KFS_TRACE("variables_delete - 22", NULL);
       free(inx->name);
-      KFS_TRACE("variables_delete - 23", NULL);
       dict->elfree(inx->data);
-      KFS_TRACE("variables_delete - 24", NULL);
       free(inx);
     }
-    KFS_TRACE("variables_delete - 3", NULL);
     free(dict);
-    KFS_TRACE("variables_delete - 4", NULL);
   }
 }
 
@@ -41,8 +33,8 @@ int dict_set(Dictionary *dict, char *name, void *data, int mode) {
   DictItem *inx; list_for_each_entry(inx, &dict->lst, lst) {
     if (!strcmp(inx->name, name)) {
       dict->elfree(inx->data);
-      free(name);
       inx->data = data;
+      free(name);
       return KFS_DICT_SET_RET_OK;
     }
   }

@@ -21,7 +21,7 @@ typedef struct tagVariables {
 #define VARIABLE_SET_RET_NOT_SET  1
 
 #define VARIABLE_ADD_MODE_FORCE_ADD 1
-#define VARIABLE_ADD_MODE_ADD_ONLY_OVERRIDE 0
+#define VARIABLE_ADD_MODE_ADD_ONLY_OVERRIDE 2
 
 char *variables_to_string(Variables *kv);
 
@@ -34,20 +34,29 @@ char *var_stack_to_string(VarStack *vs);
 
 typedef struct tagKfsLangEnv {
    Expression *expression;
-   ll_t variablesStack; // head of VarStack
+   ll_t varStackStack;
    regex_t stringSysReplace;
    int useStringSysReplace;
 } KfsLangEnv;
 
 KfsLangEnv *kfs_lang_env_new();
 void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv);
+
 VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv);
 void kfs_lang_env_remove_space(KfsLangEnv *kfsLangEnv);
 
 void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv);
 void kfs_lang_env_space_del_vars(KfsLangEnv *kfsLangEnv);
 
-Value *eval_kfs_lang(KfsLangEnv *kfsLangEnv, char *code);
+Value *kfs_lang_get_var(KfsLangEnv *kfsLangEnv, char *name);
+void kfs_lang_set_var(KfsLangEnv *kfsLangEnv, char *name, Value *value);
+
+#define KLVTS_ONLY_ACTUAL_SPACE 0x1
+#define KLVTS_ALL_SPACES        0x2
+
+char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode);
+
+Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code);
 
 #if defined(__cplusplus)
 }

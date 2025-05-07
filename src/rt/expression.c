@@ -5,8 +5,7 @@ Expression *expression_new(OperationType type) {
   expression->type = type;
   expression->lValue = 0;
   expression->dValue = 0;
-  expression->lst.next = &expression->lst;
-  expression->lst.prev = &expression->lst;
+  KFS_LST_INIT(expression->lst);
   expression->left = NULL;
   expression->right = NULL;
   expression->object = NULL;
@@ -44,7 +43,6 @@ Expression *expression_create_string(char *value) {
 
 Expression *expression_create_list() {
   Expression *expression = expression_new(eListVALUE);
-  if (expression == NULL) return NULL;
   return expression;
 }
 

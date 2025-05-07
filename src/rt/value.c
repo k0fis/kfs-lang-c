@@ -178,16 +178,19 @@ char *value_to_string(Value *value, int mode) {
         }
       }
       case List: {
-        KFS_MALLOC_CHAR(ret, 2);
-        ret[0] = '['; ret[1]='\0';
+        KFS_MALLOC_CHAR(ret, 3);
+        strcat(ret, "[ ");
         Value *inx = NULL; list_for_each_entry(inx, &value->lValue, lValue) {
           char *val = value_to_string(inx, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
-          ret = realloc(ret, strlen(ret) + strlen(val)+2);
+          ret = realloc(ret, strlen(ret) + strlen(val)+3);
           strcat(ret, val);
-          strcat(ret, ",");
+          strcat(ret, ", ");
           free(val);
         }
         ret[strlen(ret)-1] = ']';
+        if (strlen(ret) > 2) {
+          ret[strlen(ret)-2] = ' ';
+        }
         return ret;
       }
       case Object: {
