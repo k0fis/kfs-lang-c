@@ -13,8 +13,8 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
   typedef void* yyscan_t;
 }
 
-%output  "out/parser.c"
-%defines "out/parser.h"
+//%output  "out/parser.c"
+//%defines "out/parser.h"
 
 %define api.pure
 %lex-param   { yyscan_t scanner }
@@ -61,8 +61,8 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %token <buffer> TOKEN_IDENT  "ID"
 %token <buffer> TOKEN_STR    "str"
 
-%type <expression> expr
-%type <expression> expr_list
+%type <expression> expr input
+%type <expression> expr_list expr_list_semi
 %type <expression> named_list
 
 /* Precedence (increasing) and associativity:
@@ -88,7 +88,8 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %%
 
 input
-    : expr { kfsLangEnv->expression = $1; }
+    : expr[R]                { kfsLangEnv->expression = $R; }
+    | expr_list_semi[R]      { kfsLangEnv->expression = $R; }
     ;
 
 expr
@@ -124,10 +125,14 @@ expr
 
 expr_list
     : expr_list[L] "," expr[R] { if ($L == NULL) $L = expression_create_list(); $$ = expression_add_list_item($L, $R); }
-    | expr[R]                  { $$ = expression_create_list(); expression_add_list_item($$, $R); }
+    | expr[R]                  { $$ = expression_add_list_item(expression_create_list(), $R); }
     |                          { $$ = expression_create_list(); }
     ;
-
+expr_list_semi
+    : expr_list_semi[L] ";" expr[R] { if ($L == NULL) $L = expression_create_list(); $$ = expression_add_list_item($L, $R); }
+    | expr[R]                  { $$ = expression_add_list_item(expression_create_list(), $R); }
+    |                          { $$ = expression_create_list(); }
+    ;
 named_list
     : named_list[L] ";" "ID"[N] ":" expr[R] { if ($L == NULL) $L = expression_create_object();
                             $$ = expression_add_object_item($L, $N, $R); }

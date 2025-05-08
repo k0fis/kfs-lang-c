@@ -41,7 +41,8 @@ int dict_set(Dictionary *dict, char *name, void *data, int mode) {
   if (mode & KFS_DICT_SET_DO_NOT_CREATE_NEW) {
     return KFS_DICT_SET_RET_NOT_SET;
   }
-  list_add_tail(&dict_item_new(name, data)->lst, &dict->lst);
+  inx = dict_item_new(name, data);
+  list_add_tail(&inx->lst, &dict->lst);
   return KFS_DICT_SET_RET_OK;
 }
 

@@ -6,10 +6,10 @@
 #include "parser.h"
 
 #include <stdio.h>
-
+//%option outfile="out/lexer.c" header-file="out/lexer.h"
 %}
 
-%option outfile="out/lexer.c" header-file="out/lexer.h"
+
 %option warn nodefault
 
 %option reentrant noyywrap never-interactive nounistd

@@ -18,8 +18,10 @@ typedef struct tagValue {
     int iValue; // Int && Bool -> 0 false, !0 true
     double dValue;
     char *sValue;
-    ll_t lValue;
+    ll_t listValue;
     Dictionary *oValue;
+
+    ll_t handle;
 } Value;
 
 

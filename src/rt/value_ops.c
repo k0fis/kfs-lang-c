@@ -16,7 +16,9 @@ Value *value_plus(Value *left, Value *right) {
       KFS_MALLOC_CHAR(ns, (int)(1+strlen(buffer)+strlen(right->sValue)));
       strcat(ns, buffer);
       strcat(ns, right->sValue);
-      return value_new_string(ns);
+      Value *ret =value_new_string(ns);
+      free(ns);
+      return ret;
     }
   }
   if (left->type == Double) {
@@ -31,7 +33,9 @@ Value *value_plus(Value *left, Value *right) {
       KFS_MALLOC_CHAR(ns, (int)(1+strlen(buffer)+strlen(right->sValue)));
       strcat(ns, buffer);
       strcat(ns, right->sValue);
-      return value_new_string(ns);
+      Value *ret = value_new_string(ns);
+      free(ns);
+      return ret;
     }
   }
   if (left->type == Bool) {
@@ -39,11 +43,13 @@ Value *value_plus(Value *left, Value *right) {
          return value_new_bool( left->iValue || right->iValue );
       }
       if (right->type == String) {
-         snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
-         KFS_MALLOC_CHAR(ns, (int)(strlen(buffer) + strlen(left->sValue)+1));
-         strcat(ns, buffer);
-         strcat(ns, right->sValue);
-         return value_new_string(ns);
+        snprintf(buffer, BUFF_SIZE, "%s", right->iValue?"true":"false");
+        KFS_MALLOC_CHAR(ns, (int)(strlen(buffer) + strlen(left->sValue)+1));
+        strcat(ns, buffer);
+        strcat(ns, right->sValue);
+        Value *ret = value_new_string(ns);
+        free(ns);
+        return ret;
       }
   }
   if (left->type == String) {
@@ -61,13 +67,17 @@ Value *value_plus(Value *left, Value *right) {
         KFS_MALLOC_CHAR(ns, (int)(strlen(buffer) + strlen(left->sValue)+1));
         strcat(ns, left->sValue);
         strcat(ns, buffer);
-        return value_new_string(ns);
+        Value *ret = value_new_string(ns);
+        free(ns);
+        return ret;
       }
       if (right->type == String) {
         KFS_MALLOC_CHAR(ns, (int)(strlen(right->sValue) + strlen(left->sValue)+1));
         strcat(ns, left->sValue);
         strcat(ns, right->sValue);
-        return value_new_string(ns);
+        Value *ret = value_new_string(ns);
+        free(ns);
+        return ret;
       }
   }
   return NULL;
@@ -224,13 +234,13 @@ Value *value_eq(Value *left, Value *right) {
     Value *inx = NULL, *iny = NULL;
     int eq = 0;
     //_value_print(left, " - cmp : ", " x"); value_print(right);
-    for (inx = list_entry((&left->lValue)->next, __typeof__(*inx), lValue),
-         iny = list_entry((&right->lValue)->next, __typeof__(*iny), lValue)
+    for (inx = list_entry((&left->listValue)->next, __typeof__(*inx), handle),
+         iny = list_entry((&right->listValue)->next, __typeof__(*iny), handle)
         ;
-          (&(inx->lValue) != &(left->lValue)) && (&(iny->lValue) != &(right->lValue))
+          (&(inx->handle) != &(left->listValue)) && (&(iny->handle) != &(right->listValue))
         ;
-          inx = list_entry(inx->lValue.next, __typeof__(*inx), lValue),
-          iny = list_entry(iny->lValue.next, __typeof__(*iny), lValue)
+          inx = list_entry(inx->handle.next, __typeof__(*inx), handle),
+          iny = list_entry(iny->handle.next, __typeof__(*iny), handle)
       ) {
          //_value_print(inx, "- 1  ", " -"); value_print(iny);
           Value *eqVal = value_eq(inx, iny);
@@ -240,7 +250,7 @@ Value *value_eq(Value *left, Value *right) {
     }
     //printf("- 5 %i\n", eq);
     if (!eq) return value_new_bool(0);
-    if ((&inx->lValue == &(left->lValue)) && (&iny->lValue == &(right->lValue))) {
+    if ((&inx->handle == &(left->listValue)) && (&iny->handle == &(right->listValue))) {
       // both list have same size
       return value_new_bool(1);
     }

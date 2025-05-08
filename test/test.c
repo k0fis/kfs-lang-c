@@ -123,8 +123,10 @@ int main(void) {
    KFS_INFO("start test");
    KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
+   eval_l(kfsLangEnv, "[[[[[]]]]]; []");
    eval_l(kfsLangEnv, "[]");
    eval_l(kfsLangEnv, "[1]");
+   eval_l(kfsLangEnv, "[[],[]]");
    eval_l(kfsLangEnv, "[1, 2]");
    eval_l(kfsLangEnv, "[1, 2 , 3 ]");
    eval_b(kfsLangEnv, " true", TRUE);

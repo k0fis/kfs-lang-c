@@ -5,7 +5,8 @@ Expression *expression_new(OperationType type) {
   expression->type = type;
   expression->lValue = 0;
   expression->dValue = 0;
-  KFS_LST_INIT(expression->lst);
+  KFS_LST_INIT(expression->list);
+  KFS_LST_INIT(expression->upHandle);
   expression->left = NULL;
   expression->right = NULL;
   expression->object = NULL;
@@ -69,8 +70,8 @@ void expression_delete(Expression *expression) {
     free(expression->str);
   }
   if (expression->type == eListVALUE) {
-    Expression *inx, *tmp; list_for_each_entry_safe(inx, tmp, &expression->lst, lst) {
-      list_del(&inx->lst);
+    Expression *inx, *tmp; list_for_each_entry_safe(inx, tmp, &expression->list, upHandle) {
+      list_del(&inx->upHandle);
       expression_delete(inx);
     }
   } else if (expression->type == eObjectVALUE) {
@@ -83,7 +84,7 @@ Expression *expression_add_list_item(Expression *list, Expression *value) {
   if (list->type != eListVALUE) {
     KFS_ERROR("Cannot add item into non list expression, type = %i", list->type);
   } else {
-    list_add_tail(&value->lst, &list->lst);
+    list_add_tail(&value->upHandle, &list->list);
   }
   return list;
 }
@@ -93,7 +94,10 @@ Expression *expression_add_object_item(Expression *object, char *name, Expressio
     KFS_ERROR("Cannot add item into non object(%s)", name);
     return object;
   }
-  dict_set(object->object, strdup(name), value, KFS_DICT_SET_NORMAL);
+  int ret = dict_set(object->object, strdup(name), value, KFS_DICT_SET_NORMAL);
+  if (ret != KFS_DICT_SET_RET_OK){
+    KFS_ERROR("Bad SET object : %i", ret);
+  }
   return object;
 }
 

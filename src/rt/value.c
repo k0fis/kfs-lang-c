@@ -5,8 +5,8 @@
 Value *value_new(ValueType type) {
   KFS_MALLOC(Value, value);
   value->type = type;
-  value->lValue.next = &value->lValue;
-  value->lValue.prev = &value->lValue;
+  KFS_LST_INIT(value->listValue);
+  KFS_LST_INIT(value->handle);
   return value;
 }
 
@@ -66,7 +66,7 @@ Value *value_copy(Value *value) {
     break;
     case List:
       result = value_new_list();
-      inx = NULL; list_for_each_entry(inx, &value->lValue, lValue) {
+      inx = NULL; list_for_each_entry(inx, &value->listValue, handle) {
         value_list_add(result, value_copy(inx));
       }
       return result;
@@ -74,7 +74,7 @@ Value *value_copy(Value *value) {
     case Object:
       result = value_new_object();
       DictItem *iny; list_for_each_entry(iny, &value->oValue->lst, lst) {
-        value_object_add(result, strdup(iny->name), value_copy((Value*)iny->data));
+        value_object_add(result, iny->name, value_copy((Value*)iny->data));
       }
       return result;
     break;
@@ -87,7 +87,7 @@ int value_object_add(Value *obj, char *name, Value *val) {
   if (obj->type != Object) {
     return -2;
   }
-  dict_set(obj->oValue, name, val, KFS_DICT_SET_NORMAL);
+  dict_set(obj->oValue, strdup(name), val, KFS_DICT_SET_NORMAL);
   return 0;
 }
 
@@ -103,7 +103,7 @@ int value_list_add(Value *list, Value *value) {
     KFS_ERROR("Try add item into array, but expression is not array, but type = %i", list->type);
     return -1;
   }
-  list_add_tail(&value->lValue, &list->lValue);
+  list_add_tail(&value->handle, &list->listValue);
   return 0;
 }
 
@@ -116,7 +116,7 @@ Value *value_list_get(Value *list, int index) {
     KFS_ERROR("Try add item into array, but expression is not array, type = %i", list->type);
     return NULL;
   }
-  int iny = 0; Value *inx = NULL; list_for_each_entry(inx, &list->lValue, lValue) {
+  int iny = 0; Value *inx = NULL; list_for_each_entry(inx, &list->listValue, handle) {
      if (iny == index) {
         return inx;
      }
@@ -127,12 +127,12 @@ Value *value_list_get(Value *list, int index) {
 }
 
 void value_delete(Value *value) {
-   if (value->type == String) {
+   if (value->sValue != NULL) {
       free(value->sValue);
    }
    if (value->type == List) {
-      Value *inx, *tmp; list_for_each_entry_safe(inx, tmp, &value->lValue, lValue) {
-          list_del(&inx->lValue);
+      Value *inx, *tmp; list_for_each_entry_safe(inx, tmp, &value->listValue, handle) {
+          list_del(&inx->handle);
           value_delete(inx);
       }
    }
@@ -180,7 +180,7 @@ char *value_to_string(Value *value, int mode) {
       case List: {
         KFS_MALLOC_CHAR(ret, 3);
         strcat(ret, "[ ");
-        Value *inx = NULL; list_for_each_entry(inx, &value->lValue, lValue) {
+        Value *inx = NULL; list_for_each_entry(inx, &value->listValue, handle) {
           char *val = value_to_string(inx, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
           ret = realloc(ret, strlen(ret) + strlen(val)+3);
           strcat(ret, val);
@@ -204,6 +204,10 @@ char *value_to_string(Value *value, int mode) {
           strcat(ret, vStr); strcat(ret, "; ");
           free(vStr);
         }
+        if (strlen(ret) > 2) {
+          ret[strlen(ret)-2] = ' ';
+        }
+        ret[strlen(ret)-1] = '}';
         return trim_str_buffer(ret);
       }
     }

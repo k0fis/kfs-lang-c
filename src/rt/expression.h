@@ -21,12 +21,13 @@ typedef struct tagExpression {
 
   int lValue;
   double dValue;
-  ll_t lst;
+  ll_t list;
   Dictionary *object;
   char *str;
 
   struct tagExpression *left;
   struct tagExpression *right;
+    ll_t upHandle;
 } Expression;
 
 Expression *expression_create_integer(int value);

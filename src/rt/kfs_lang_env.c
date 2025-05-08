@@ -236,7 +236,7 @@ char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode) {
 /////////
 
 char *replace_system_props(regex_t regex, char *input) {
-  KFS_TRACE("start replace_system_props('%s')", input);
+  //KFS_TRACE("start replace_system_props('%s')", input);
   int result;
   regmatch_t match;
   result = regexec(&regex, input, 1, &match, 0);
@@ -255,7 +255,7 @@ char *replace_system_props(regex_t regex, char *input) {
       KFS_MALLOC_CHAR(name, nameLen);
       snprintf(name, nameLen, "%.*s", nameLen-1, cursor+match.rm_so+2);
       char *replace = getenv(name);
-      KFS_TRACE("name: '%s', replace: '%s'", name, replace);
+      //KFS_TRACE("name: '%s', replace: '%s'", name, replace);
       free(name);
       if (replace != NULL) {
         output = realloc(output, outlen + strlen(replace)+1);
@@ -277,25 +277,29 @@ char *replace_system_props(regex_t regex, char *input) {
         break;
       }
     }
-    KFS_TRACE("start replace_system_props('%s') -> '%s'", input, output);
+    //KFS_TRACE("start replace_system_props('%s') -> '%s'", input, output);
     return output;
   } else if (result == REG_NOMATCH) {
-    KFS_DEBUG("No match: %s", input);
+    //KFS_DEBUG("No match: %s", input);
   } else {
     char msgbuf[1024];
     regerror(result, &regex, msgbuf, sizeof(msgbuf));
     KFS_ERROR("Regex match failed: %s", msgbuf);
   }
-  KFS_TRACE("start replace_system_props('%s') w/o changes", input);
-  return input;
+  //KFS_TRACE("start replace_system_props('%s') w/o changes", input);
+  return strdup(input);
 }
 
 Value *eval_string(KfsLangEnv *env, char *value) {
   int evalSys = value[0]=='"';
   value+=1;value[strlen(value)-1] = '\0';
-  KFS_TRACE("eval_string: %i && %i = %i", env->useStringSysReplace, evalSys, env->useStringSysReplace && evalSys);
-  if (env->useStringSysReplace && evalSys)
-    return value_new_string(replace_system_props(env->stringSysReplace, value));
+  //KFS_TRACE("eval_string: %i && %i = %i", env->useStringSysReplace, evalSys, env->useStringSysReplace && evalSys);
+  if (env->useStringSysReplace && evalSys) {
+    char *copy_value = replace_system_props(env->stringSysReplace, value);
+    Value * ret = value_new_string(copy_value);
+    free(copy_value);
+    return ret;
+  }
   return value_new_string(value);
 }
 
@@ -322,7 +326,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
         KFS_ERROR("Cannot obtain new LIST value(%i)", 0);
         return NULL;
       }
-      Expression *inx; list_for_each_entry(inx, &e->lst, lst) {
+      Expression *inx; list_for_each_entry(inx, &e->list, upHandle) {
         value_list_add(lv, kfs_lang_eval_value(kfsLangEnv, inx));
       }
       return lv;
