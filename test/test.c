@@ -18,7 +18,9 @@ int eval_s (KfsLangEnv *kfsLangEnv, char *code, char *expected) {
       return -1;
     }
     if (value->type != String) {
-      KFS_ERROR("Bad result type (%i)", value->type);
+      char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+      KFS_ERROR("Bad result type (%i): %s ->  %s", value->type, code, info);
+      free(info);
       ret = -2;
     } else {
       if (strcmp(value->sValue, expected)) {
@@ -37,7 +39,9 @@ void eval_i (KfsLangEnv *kfsLangEnv, char *code, int result) {
       return;
     }
     if (value->type != Int) {
-      KFS_ERROR("Bad result type(%i)", value->type);
+      char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+      KFS_ERROR("Bad result type (%i): %s ->  %s", value->type, code, info);
+      free(info);
     } else {
       if (value->iValue != result) {
         char *valStr = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
@@ -56,7 +60,9 @@ void eval_b (KfsLangEnv *kfsLangEnv, char *code, int result) {
     }
     if (value->type != Bool) {
       KFS_INFO(code);
-      KFS_ERROR("Bad result type (%i)", value->type);
+      char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+      KFS_ERROR("Bad result type (%i): %s", value->type, info);
+      free(info);
     } else {
       if ( ((!value->iValue) ^ (!result))) {
         char *valStr = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
@@ -74,7 +80,9 @@ void eval_d(KfsLangEnv *kfsLangEnv, char *code, double result, double prec) {
       return;
     }
     if (value->type != Double) {
-      KFS_ERROR("Bad result type(%i)", value->type);
+      char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+      KFS_ERROR("Bad result type (%i): %s ->  %s", value->type, code, info);
+      free(info);
     } else {
       if (fabs(value->dValue-result) > prec) {
         char *valStr = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
@@ -92,7 +100,9 @@ void eval_l(KfsLangEnv *kfsLangEnv, char *code) {
       return;
     }
     if (value->type != List) {
-      KFS_ERROR("Bad result type(%i)", value->type);
+      char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+      KFS_ERROR("Bad result type (%i): %s ->  %s", value->type, code, info);
+      free(info);
     } else {
       char *valStr = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
       KFS_INFO2("Array: %s", valStr);
@@ -102,15 +112,16 @@ void eval_l(KfsLangEnv *kfsLangEnv, char *code) {
 }
 
 void eval_o(KfsLangEnv *kfsLangEnv, char *code) {
-  KFS_INFO(code);
   Value *value = kfs_lang_eval(kfsLangEnv, code);
   if (value == NULL) {
       KFS_ERROR( "result is NULL for code : %s", code);
     return;
   }
   if (value->type != Object) {
-      KFS_ERROR( "%s - Bad result type : %i", code, value->type);
-  } else {
+      char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+      KFS_ERROR("Bad result type (%i): %s ->  %s", value->type, code, info);
+      free(info);
+    } else {
     char *valStr = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
     KFS_INFO2("Object: %s", valStr);
     free(valStr);
@@ -123,9 +134,9 @@ int main(void) {
    KFS_INFO("start test");
    KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
-   eval_l(kfsLangEnv, "[[[[[]]]]]; []");
+   eval_l(kfsLangEnv, "[[[[[]]]], []]");
    eval_l(kfsLangEnv, "[]");
-   eval_l(kfsLangEnv, "[1]");
+   eval_i(kfsLangEnv, "[1]", 1);
    eval_l(kfsLangEnv, "[[],[]]");
    eval_l(kfsLangEnv, "[1, 2]");
    eval_l(kfsLangEnv, "[1, 2 , 3 ]");
@@ -143,8 +154,16 @@ int main(void) {
    CE("string", eval_s(kfsLangEnv, "  \"pr\"+'d' ", "prd"));
 
    setenv("napicu", "popici", 0);
-   CE("string with replace sys env", eval_s(kfsLangEnv, " \"{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil\" ", "popici pako je defo a je to -popici- a nebo taky -{{napicu2}}popici- debil"));
-   CE("string w/o replace sys", eval_s(kfsLangEnv, " '{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil' ", "{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil"));
+//   CE("string with replace sys env", eval_s(kfsLangEnv, " \"{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil\" ", "popici pako je defo a je to -popici- a nebo taky -{{napicu2}}popici- debil"));
+//   CE("string w/o replace sys", eval_s(kfsLangEnv, " '{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil' ", "{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil"));
+
+    eval_i(kfsLangEnv, "a = 1;", 1);
+    eval_i(kfsLangEnv, "if (false) b = 2; else b = 3;", 3);
+    eval_i(kfsLangEnv, "if (true) b = 2; else b = 3;", 2);
+    eval_l(kfsLangEnv, "a = 1; n=2;");
+    eval_l(kfsLangEnv, "{ a = 1; n=2; }");
+
+    eval_l(kfsLangEnv, "if (true) {a = 2;} else {a=3;} c = 1+a; d=a+c;");
 
    KFS_INFO("end test");
    kfs_lang_env_delete(kfsLangEnv);

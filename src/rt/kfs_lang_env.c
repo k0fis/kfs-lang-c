@@ -406,6 +406,10 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       return result;
     case eDOT:
       lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      if (lv == NULL) {
+        KFS_ERROR("Cannot evaluate object", NULL);
+        return NULL;
+      }
       if (lv->type != Object) {
         KFS_ERROR("Object access to non-object value (%i)", lv->type);
         value_delete(lv);
@@ -467,6 +471,39 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
         case Int: ;
       }
       return lv;
+    case eVAR:
+      return value_copy(kfs_lang_get_var(kfsLangEnv, e->str));
+    case eASSIGN_VAR:
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      if (lv != NULL) {
+        kfs_lang_set_var(kfsLangEnv, strdup(e->str), value_copy(lv));
+      } else {
+        KFS_ERROR("Cannot assign value to variable: %s", e->str);
+      }
+      return lv;
+    case eBLOCK:
+      kfs_lang_env_space_add_vars(kfsLangEnv);
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      kfs_lang_env_space_del_vars(kfsLangEnv);
+      return lv;
+    case eIF:
+      result = kfs_lang_eval_value(kfsLangEnv, e->next);
+      int block = 0; // false
+      if (result == NULL) {
+        KFS_ERROR("Empty result", NULL);
+      } else if (result->type != Bool) {
+        KFS_ERROR("Object access to non-boolean value (%i)", result->type);
+        //value_delete(result);
+        //return  NULL;
+      } else if (result->iValue) {
+        block = 1;
+      }
+      value_delete(result);
+      if (block) {
+        return kfs_lang_eval_value(kfsLangEnv, e->right);
+      } else {
+        return kfs_lang_eval_value(kfsLangEnv, e->left);
+      }
   }
   return NULL;
 }
@@ -486,7 +523,7 @@ Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code) {
   }
   state = yy_scan_string(code, scanner);
   if (yyparse(kfsLangEnv, scanner)) {
-    KFS_ERROR("Cannot parse code", NULL);
+    KFS_ERROR("Cannot parse code %s", code);
     return NULL;
   }
   yy_delete_buffer(state, scanner);

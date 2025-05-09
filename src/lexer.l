@@ -6,9 +6,7 @@
 #include "parser.h"
 
 #include <stdio.h>
-//%option outfile="out/lexer.c" header-file="out/lexer.h"
 %}
-
 
 %option warn nodefault
 
@@ -63,8 +61,12 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "{"         { return TOKEN_LCURLY; }
 "}"         { return TOKEN_RCURLY; }
 "int"       { return TOKEN_INT; }
+"if"        { return TOKEN_IF; }
+"else"      { return TOKEN_ELSE; }
+
 {IDENT}     { strncpy(yylval->buffer, yytext, 1023); return TOKEN_IDENT; }
 {STRING}    { strncpy(yylval->buffer, yytext, 1023); return TOKEN_STR; }
+"="         { return TOKEN_ASSIGN; }
 
 "/*"					BEGIN(comment);
 <comment>[^*\n]*

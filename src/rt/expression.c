@@ -9,6 +9,7 @@ Expression *expression_new(OperationType type) {
   KFS_LST_INIT(expression->upHandle);
   expression->left = NULL;
   expression->right = NULL;
+  expression->next = NULL;
   expression->object = NULL;
   expression->str = NULL;
   return expression;
@@ -62,10 +63,58 @@ Expression *expression_create_binary_operation(OperationType type, Expression *l
   return expression;
 }
 
+Expression *expression_create_variable_assign(char *name, Expression *value) {
+  Expression *expression = expression_new(eASSIGN_VAR);
+  if (expression == NULL) return NULL;
+  expression->left = value;
+  expression->str = strdup(name);
+  return expression;
+}
+
+Expression *expression_create_variable(char *name) {
+  Expression *expression = expression_new(eVAR);
+  if (expression == NULL) return NULL;
+  expression->str = strdup(name);
+  return expression;
+}
+
+Expression *expression_create_new_block(Expression *block) {
+  Expression *expression = expression_new(eBLOCK);
+  if (expression == NULL) return NULL;
+  expression->left = block;
+  return expression;
+}
+
+Expression *expression_create_if(Expression *query, Expression *blockTrue, Expression *blockFalse) {
+  Expression *expression = expression_new(eIF);
+  if (expression == NULL) return NULL;
+  expression->next = query;
+  expression->right = blockTrue;
+  expression->left = blockFalse;
+  return expression;
+}
+
+Expression *expression_delist(Expression *item) {
+  if (item == NULL) return NULL;
+  if (item->type != eListVALUE) return item;
+  int cnt= 0; Expression *inx, *tmp; list_for_each_entry(inx, &item->list, upHandle) {
+    cnt++;
+  }
+  if (cnt != 1) return item;
+  list_for_each_entry_safe(inx, tmp, &item->list, upHandle) {
+    list_del(&inx->upHandle);
+    expression_delete(item);
+    return inx;
+  }
+  KFS_ERROR("Bad state!", NULL);
+  return NULL;
+}
+
 void expression_delete(Expression *expression) {
   if (expression == NULL) return;
   expression_delete(expression->left);
   expression_delete(expression->right);
+  expression_delete(expression->next);
   if (expression->str != NULL) {
     free(expression->str);
   }

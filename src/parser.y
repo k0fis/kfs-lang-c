@@ -13,9 +13,6 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
   typedef void* yyscan_t;
 }
 
-//%output  "out/parser.c"
-//%defines "out/parser.h"
-
 %define api.pure
 %lex-param   { yyscan_t scanner }
 %parse-param { KfsLangEnv *kfsLangEnv }
@@ -54,6 +51,9 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %token TOKEN_COLON    ":"
 %token TOKEN_SEMI     ";"
 %token TOKEN_INT      "int"
+%token TOKEN_ASSIGN   "="
+%token TOKEN_IF       "if"
+%token TOKEN_ELSE     "else"
 
 %token <lValue> TOKEN_NUMBER "number"
 %token <dValue> TOKEN_DOUBLE "double"
@@ -61,13 +61,9 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %token <buffer> TOKEN_IDENT  "ID"
 %token <buffer> TOKEN_STR    "str"
 
-%type <expression> expr input
-%type <expression> expr_list expr_list_semi
-%type <expression> named_list
+%type <expression> expr input inpt command command_list command_list_backet expr_list named_list
 
-/* Precedence (increasing) and associativity:
-   a+b+c is (a+b)+c: left associativity
-   a+b*c is a+(b*c): the precedence of "*" is higher than that of "+". */
+%right "="
 %right "["
 %right "]"
 
@@ -87,13 +83,17 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 
 %%
 
-input
-    : expr[R]                { kfsLangEnv->expression = $R; }
-    | expr_list_semi[R]      { kfsLangEnv->expression = $R; }
+input: inpt { kfsLangEnv->expression = $1; }
+;
+inpt
+    : expr[R]            { $$ = expression_delist($R); }
+    | expr_list[R]       { $$ = expression_delist($R); }
+    | command_list[C]         { $$ = expression_delist($C); }
+    | command_list_backet[C]  { $$ = expression_delist($C); }
     ;
 
 expr
-    : expr[L] "["  expr[N] "]" { $$ = expression_create_binary_operation(eARRAY_ACCESS, $L, $N); }
+    : expr[L] "["  expr[N] "]"  { $$ = expression_create_binary_operation(eARRAY_ACCESS, $L, $N); }
     | expr[L] "+"  expr[R] { $$ = expression_create_binary_operation( eADD, $L, $R ); }
     | expr[L] "-"  expr[R] { $$ = expression_create_binary_operation( eMINUS, $L, $R ); }
     | expr[L] "*"  expr[R] { $$ = expression_create_binary_operation( eMULTIPLY, $L, $R ); }
@@ -121,6 +121,7 @@ expr
     | "double"               { $$ = expression_create_double($1); }
     | "bool"                 { $$ = expression_create_bool($1); }
     | "str"                  { $$ = expression_create_string($1); }
+    | "ID"[N]                { $$ = expression_create_variable($N); }
     ;
 
 expr_list
@@ -128,15 +129,23 @@ expr_list
     | expr[R]                  { $$ = expression_add_list_item(expression_create_list(), $R); }
     |                          { $$ = expression_create_list(); }
     ;
-expr_list_semi
-    : expr_list_semi[L] ";" expr[R] { if ($L == NULL) $L = expression_create_list(); $$ = expression_add_list_item($L, $R); }
-    | expr[R]                  { $$ = expression_add_list_item(expression_create_list(), $R); }
-    |                          { $$ = expression_create_list(); }
+command_list_backet
+    : "{" command_list[R] "}"    { $$ = expression_create_new_block(expression_delist($R)); }
+    ;
+command_list
+    : command_list[L] command[R] { if ($L == NULL) $L = expression_create_list(); $$ = expression_add_list_item($L, $R); }
+    | command[R]                 { $$ = expression_add_list_item(expression_create_list(), $R); }
+    |                            { $$ = expression_create_list(); }
     ;
 named_list
     : named_list[L] ";" "ID"[N] ":" expr[R] { if ($L == NULL) $L = expression_create_object();
                             $$ = expression_add_object_item($L, $N, $R); }
     | "ID"[N] ":" expr[R] { $$ = expression_create_object(); expression_add_object_item($$, $N, $R); }
     |                     { $$ = expression_create_object(); }
+    ;
+command
+    : "ID"[N] "=" expr[R] ";"  { $$ = expression_create_variable_assign($N, $R); }
+    | "if" "(" expr[Q] ")" inpt[T] { $$ = expression_create_if($Q, $T, NULL); }
+    | "if" "(" expr[Q] ")" inpt[T] "else" inpt[F] { $$ = expression_create_if($Q, $T, $F);}
     ;
 %%
