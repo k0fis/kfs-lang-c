@@ -94,6 +94,14 @@ Expression *expression_create_if(Expression *query, Expression *blockTrue, Expre
   return expression;
 }
 
+Expression *expression_create_while(Expression *query, Expression *block) {
+  Expression *expression = expression_new(eWHILE);
+  if (expression == NULL) return NULL;
+  expression->next = query;
+  expression->right = block;
+  return expression;
+}
+
 Expression *expression_delist(Expression *item) {
   if (item == NULL) return NULL;
   if (item->type != eListVALUE) return item;

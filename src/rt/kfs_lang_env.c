@@ -504,6 +504,24 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       } else {
         return kfs_lang_eval_value(kfsLangEnv, e->left);
       }
+    case eWHILE:
+      result = kfs_lang_eval_value(kfsLangEnv, e->next);
+      if (result == NULL) {
+        KFS_ERROR("Empty result", NULL);
+        return NULL;
+      } else if (result->type != Bool) {
+        KFS_ERROR("Object access to non-boolean value (%i)", result->type);
+        value_delete(result);
+        return NULL;
+      }
+      while (result->iValue) {
+        value_delete(result);
+        lv = kfs_lang_eval_value(kfsLangEnv, e->right);
+        value_delete(lv);
+        result = kfs_lang_eval_value(kfsLangEnv, e->next);
+      }
+      value_delete(result);
+      return NULL;
   }
   return NULL;
 }

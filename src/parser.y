@@ -54,6 +54,7 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %token TOKEN_ASSIGN   "="
 %token TOKEN_IF       "if"
 %token TOKEN_ELSE     "else"
+%token TOKEN_WHILE     "while"
 
 %token <lValue> TOKEN_NUMBER "number"
 %token <dValue> TOKEN_DOUBLE "double"
@@ -144,8 +145,10 @@ named_list
     |                     { $$ = expression_create_object(); }
     ;
 command
-    : "ID"[N] "=" expr[R] ";"  { $$ = expression_create_variable_assign($N, $R); }
-    | "if" "(" expr[Q] ")" inpt[T] { $$ = expression_create_if($Q, $T, NULL); }
-    | "if" "(" expr[Q] ")" inpt[T] "else" inpt[F] { $$ = expression_create_if($Q, $T, $F);}
+    : "ID"[N] "=" expr[R] ";"           { $$ = expression_create_variable_assign($N, $R); }
+    | "if" "(" expr[Q] ")" inpt[T]      { $$ = expression_create_if($Q, $T, NULL); }
+    | "if" "(" expr[Q] ")" inpt[T] "else" inpt[F] {
+                                          $$ = expression_create_if($Q, $T, $F); }
+    | "while" "(" expr[Q] ")" inpt[B]   { $$ = expression_create_while($Q, $B); }
     ;
 %%

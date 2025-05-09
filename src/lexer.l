@@ -63,7 +63,7 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "int"       { return TOKEN_INT; }
 "if"        { return TOKEN_IF; }
 "else"      { return TOKEN_ELSE; }
-
+"while"     { return TOKEN_WHILE; }
 {IDENT}     { strncpy(yylval->buffer, yytext, 1023); return TOKEN_IDENT; }
 {STRING}    { strncpy(yylval->buffer, yytext, 1023); return TOKEN_STR; }
 "="         { return TOKEN_ASSIGN; }

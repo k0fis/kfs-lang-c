@@ -103,7 +103,8 @@ int value_list_add(Value *list, Value *value) {
     KFS_ERROR("Try add item into array, but expression is not array, but type = %i", list->type);
     return -1;
   }
-  list_add_tail(&value->handle, &list->listValue);
+  if (value != NULL)
+    list_add_tail(&value->handle, &list->listValue);
   return 0;
 }
 
@@ -127,19 +128,21 @@ Value *value_list_get(Value *list, int index) {
 }
 
 void value_delete(Value *value) {
-   if (value->sValue != NULL) {
+  if (value != NULL) {
+    if (value->sValue != NULL) {
       free(value->sValue);
-   }
-   if (value->type == List) {
+    }
+    if (value->type == List) {
       Value *inx, *tmp; list_for_each_entry_safe(inx, tmp, &value->listValue, handle) {
-          list_del(&inx->handle);
-          value_delete(inx);
+        list_del(&inx->handle);
+        value_delete(inx);
       }
-   }
-   if (value->type == Object) {
+    }
+    if (value->type == Object) {
       dict_delete(value->oValue);
-   }
-   free(value);
+    }
+    free(value);
+  }
 }
 
 char *trim_str_buffer(char *buffer) {

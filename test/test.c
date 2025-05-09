@@ -164,6 +164,7 @@ int main(void) {
     eval_l(kfsLangEnv, "{ a = 1; n=2; }");
 
     eval_l(kfsLangEnv, "if (true) {a = 2;} else {a=3;} c = 1+a; d=a+c;");
+    eval_l(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1;} d=b;");
 
    KFS_INFO("end test");
    kfs_lang_env_delete(kfsLangEnv);
