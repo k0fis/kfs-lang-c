@@ -55,6 +55,8 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %token TOKEN_IF       "if"
 %token TOKEN_ELSE     "else"
 %token TOKEN_WHILE     "while"
+%token TOKEN_BREAK     "break"
+%token TOKEN_CONTI     "continue"
 
 %token <lValue> TOKEN_NUMBER "number"
 %token <dValue> TOKEN_DOUBLE "double"
@@ -150,5 +152,7 @@ command
     | "if" "(" expr[Q] ")" inpt[T] "else" inpt[F] {
                                           $$ = expression_create_if($Q, $T, $F); }
     | "while" "(" expr[Q] ")" inpt[B]   { $$ = expression_create_while($Q, $B); }
+    | "break" ";"                       { $$ = expression_create_break(); }
+    | "continue" ";"                    { $$ = expression_create_continue(); }
     ;
 %%

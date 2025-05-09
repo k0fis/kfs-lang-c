@@ -64,6 +64,8 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "if"        { return TOKEN_IF; }
 "else"      { return TOKEN_ELSE; }
 "while"     { return TOKEN_WHILE; }
+"break"     { return TOKEN_BREAK; }
+"continue"  { return TOKEN_CONTI; }
 {IDENT}     { strncpy(yylval->buffer, yytext, 1023); return TOKEN_IDENT; }
 {STRING}    { strncpy(yylval->buffer, yytext, 1023); return TOKEN_STR; }
 "="         { return TOKEN_ASSIGN; }

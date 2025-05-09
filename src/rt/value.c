@@ -57,27 +57,25 @@ Value *value_copy(Value *value) {
     case Bool:
     case Int:
       return value_new_int(value->iValue);
-    break;
     case Double:
       return value_new_double(value->dValue);
-    break;
     case String:
       return value_new_string(value->sValue);
-    break;
     case List:
       result = value_new_list();
       inx = NULL; list_for_each_entry(inx, &value->listValue, handle) {
         value_list_add(result, value_copy(inx));
       }
       return result;
-    break;
     case Object:
       result = value_new_object();
       DictItem *iny; list_for_each_entry(iny, &value->oValue->lst, lst) {
         value_object_add(result, iny->name, value_copy((Value*)iny->data));
       }
       return result;
-    break;
+    case FC_Break:
+    case FC_Conti:
+      return value_new(value->type);
   }
   KFS_ERROR("Error in copying values, type: %i", value->type);
   return NULL;
@@ -156,6 +154,10 @@ char *value_to_string(Value *value, int mode) {
     return trim_str_buffer(tmp);
   } else {
     switch (value->type) {
+      case FC_Break:
+        return strdup("FC_Break");
+      case FC_Conti:
+        return strdup("FC_Conti");
       case Int: {
         KFS_MALLOC_CHAR(tmp, 256);
         snprintf(tmp, 255, "%i", value->iValue);

@@ -9,7 +9,8 @@ extern "C" {
 #endif  // __cplusplus
 
 typedef enum tagValueType {
-    Int, Double, Bool, String, List, Object
+    Int, Double, Bool, String, List, Object,
+    FC_Break, FC_Conti
 } ValueType;
 
 typedef struct tagValue {
@@ -25,6 +26,7 @@ typedef struct tagValue {
 } Value;
 
 
+Value *value_new(ValueType type);
 Value *value_new_int(int iValue);
 Value *value_new_double(double dValue);
 Value *value_new_bool(int bValue);

@@ -143,16 +143,20 @@ KfsLangEnv *kfs_lang_env_new() {
   return env;
 }
 
+void varStackStack_cleanup(KfsLangEnv *kfsLangEnv) {
+  VarStack *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kfsLangEnv->varStackStack, lstEnv) {
+    list_del(&inx->lstEnv);
+    var_stack_delete(inx);
+  }
+}
+
 void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv) {
   if (kfsLangEnv != NULL) {
     if (kfsLangEnv->expression != NULL) {
       expression_delete(kfsLangEnv->expression);
     }
     regfree(&(kfsLangEnv->stringSysReplace));
-    VarStack *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kfsLangEnv->varStackStack, lstEnv) {
-      list_del(&inx->lstEnv);
-      var_stack_delete(inx);
-    }
+    varStackStack_cleanup(kfsLangEnv);
     free(kfsLangEnv);
   }
 }
@@ -312,6 +316,10 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
   int iny;
 
   switch (e->type) {
+    case eBREAK:
+      return value_new(FC_Break);
+    case eCONTI:
+      return value_new(FC_Conti);
     case eIntVALUE:
       return value_new_int(e->lValue);
     case eDoubleVALUE:
@@ -327,7 +335,14 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
         return NULL;
       }
       Expression *inx; list_for_each_entry(inx, &e->list, upHandle) {
-        value_list_add(lv, kfs_lang_eval_value(kfsLangEnv, inx));
+        rv = kfs_lang_eval_value(kfsLangEnv, inx);
+        if (rv != NULL) {
+          if ((rv->type == FC_Break) || (rv->type == FC_Conti)) {
+            value_delete(lv);
+            return rv;
+          }
+          value_list_add(lv, rv);
+        }
       }
       return lv;
     case eObjectVALUE:
@@ -455,6 +470,10 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eINT:
       lv = kfs_lang_eval_value(kfsLangEnv, e->left);
       switch (lv->type) {
+        case FC_Break:
+        case FC_Conti:
+          KFS_ERROR("Cannot convert Flow-Controll into int", NULL);
+          return NULL;
         case String:
           KFS_ERROR("Cannot convert String into int", NULL);
           return NULL;
@@ -499,24 +518,27 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
         block = 1;
       }
       value_delete(result);
-      if (block) {
+      if (block)
         return kfs_lang_eval_value(kfsLangEnv, e->right);
-      } else {
-        return kfs_lang_eval_value(kfsLangEnv, e->left);
-      }
+      return kfs_lang_eval_value(kfsLangEnv, e->left);
     case eWHILE:
       result = kfs_lang_eval_value(kfsLangEnv, e->next);
       if (result == NULL) {
         KFS_ERROR("Empty result", NULL);
         return NULL;
-      } else if (result->type != Bool) {
+      }
+      if (result->type != Bool) {
         KFS_ERROR("Object access to non-boolean value (%i)", result->type);
         value_delete(result);
         return NULL;
       }
       while (result->iValue) {
-        value_delete(result);
+        value_delete(result); result = NULL;
         lv = kfs_lang_eval_value(kfsLangEnv, e->right);
+        if (lv->type == FC_Break) {
+          value_delete(lv);
+          break;
+        }
         value_delete(lv);
         result = kfs_lang_eval_value(kfsLangEnv, e->next);
       }
@@ -530,10 +552,17 @@ Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code) {
   yyscan_t scanner;
   YY_BUFFER_STATE state;
 
+  // remove last expressions
   if (kfsLangEnv->expression != NULL) {
     expression_delete(kfsLangEnv->expression);
     kfsLangEnv->expression = NULL;
   }
+
+  // remove last variables
+  varStackStack_cleanup(kfsLangEnv);
+  // and prepare new space
+  kfs_lang_env_add_space(kfsLangEnv);
+
 
   if (yylex_init(&scanner)) {
     KFS_ERROR("Cannot init yylex", NULL);

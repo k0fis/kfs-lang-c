@@ -102,6 +102,17 @@ Expression *expression_create_while(Expression *query, Expression *block) {
   return expression;
 }
 
+Expression *expression_create_break() {
+  Expression *expression = expression_new(eBREAK);
+  return expression;
+}
+
+Expression *expression_create_continue() {
+  Expression *expression = expression_new(eCONTI);
+  return expression;
+}
+
+
 Expression *expression_delist(Expression *item) {
   if (item == NULL) return NULL;
   if (item->type != eListVALUE) return item;

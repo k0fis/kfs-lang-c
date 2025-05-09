@@ -101,8 +101,10 @@ void eval_l(KfsLangEnv *kfsLangEnv, char *code) {
     }
     if (value->type != List) {
       char *info = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
-      KFS_ERROR("Bad result type (%i): %s ->  %s", value->type, code, info);
+      char *var = kfs_lang_vars_to_string(kfsLangEnv, KLVTS_ONLY_ACTUAL_SPACE);
+      KFS_ERROR("Bad result type (%i): %s ->  %s; vars: %s", value->type, code, info, var);
       free(info);
+      free(var);
     } else {
       char *valStr = value_to_string(value, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
       KFS_INFO2("Array: %s", valStr);
@@ -163,8 +165,10 @@ int main(void) {
     eval_l(kfsLangEnv, "a = 1; n=2;");
     eval_l(kfsLangEnv, "{ a = 1; n=2; }");
 
-    eval_l(kfsLangEnv, "if (true) {a = 2;} else {a=3;} c = 1+a; d=a+c;");
+    eval_l(kfsLangEnv, "a=12; if (true) {a = 2;} else {a=3;} c = 1+a; d=a+12;");
     eval_l(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1;} d=b;");
+    eval_l(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1; if (a<3) {break;} } d=b;");
+    //eval_l(kfsLangEnv, "a = 5; b = 0; break; d=b;");
 
    KFS_INFO("end test");
    kfs_lang_env_delete(kfsLangEnv);
