@@ -1,4 +1,5 @@
 %{
+#include "value.h"
 #include "json_parser.h"
 #include "utils.h"
 extern void zzerror(const char *s);
@@ -15,8 +16,8 @@ number    -?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?
 
 %%
 
-{integer}  { sscanf(yytext, "%d", &zzlval.integer);  return INTEGER; }
-{number}   { sscanf(yytext, "%lf", &zzlval.decimal); return DECIMAL; }
+{integer}  { sscanf(yytext, "%d", &yylval->integer);  return INTEGER; }
+{number}   { sscanf(yytext, "%lf", &yylval->decimal); return DECIMAL; }
 "{"        { return LCURLY; }
 "}"        { return RCURLY; }
 "["        { return LBRAC;  }
@@ -29,7 +30,7 @@ number    -?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?
 
 [ \t\r\n]+ {  }
 
-\"[^"]*\"  { zzlval.string = strdup(yytext); return STRING; }
+\"[^"]*\"  { yylval->string = strdup(yytext); return STRING; }
 
 .          { KFS_ERROR("Lexical Error: unrecognized literal '%s'", yytext); }
 

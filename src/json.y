@@ -1,11 +1,29 @@
 %{
 
+#include "value.h"
+#include "json_parser.h"
+#include "json_lexer.h"
 #include "utils.h"
 
-int zzlex();
-void zzerror(const char *s);
+void zzerror(Value **output, yyscan_t scanner, const char *msg);
 
 %}
+
+%code requires {
+  typedef void* zzscan_t;
+}
+
+%define api.pure
+%lex-param   { zzscan_t scanner }
+%parse-param { Value  **output  }
+%parse-param { zzscan_t scanner }
+
+%union {
+  char *string;
+  double decimal;
+  int integer;
+  Value *value;
+}
 
 %token LCURLY RCURLY LBRAC RBRAC COMMA COLON
 %token VTRUE VFALSE VNULL
@@ -13,50 +31,39 @@ void zzerror(const char *s);
 %token <decimal> DECIMAL;
 %token <integer> INTEGER;
 
-%union {
-  char *string;
-  double decimal;
-  int integer;
-}
+%type <value> value o_members a_members
 
 %start json
 
 %%
 
 json:
-    | value
+    | value   { *output = $1; }
     ;
 
-value: object
-     | STRING
-     | DECIMAL
-     | array
-     | VTRUE
-     | VFALSE
-     | VNULL
+value
+     : LCURLY o_members[M] RCURLY { $$ = $M; }
+     | STRING                     { $$ = value_new_string($1); }
+     | DECIMAL                    { $$ = value_new_double($1); }
+     | LBRAC a_members[A] RBRAC   { $$ = $A; }
+     | VTRUE                      { $$ = value_new_bool(1); }
+     | VFALSE                     { $$ = value_new_bool(0); }
+     | VNULL                      { $$ = value_new_list(); }
      ;
 
-object: LCURLY RCURLY
-      | LCURLY members RCURLY
-      ;
+o_members : o_members[L] COMMA STRING[N] COLON value[V] {
+                if ($L == NULL) $L = value_new_object(); value_object_add($L, $N, $V); $$ = $L; }
+          | STRING[N] COLON value[V] { $$ = value_new_object(); value_object_add($$, $N, $V); }
+          |  { $$ = value_new_object(); }
+          ;
 
-members: member
-       | members COMMA member
-       ;
-
-member: STRING COLON value
-      ;
-
-array: LBRAC RBRAC
-     | LBRAC values RBRAC
-     ;
-
-values: value
-      | values COMMA value
+a_members:                     { $$ = value_new_list(); }
+      | value                  { $$ = value_new_list(); value_list_add($$, $1); }
+      | a_members COMMA value  { if ($1 == NULL) $1 = value_new_list(); value_list_add($1, $3); $$ = $1; }
       ;
 
 %%
 
-void zzerror(const char *s){
-  KFS_ERROR("json-error: %s", s);
+void zzerror(Value **output, yyscan_t scanner, const char *msg){
+  KFS_ERROR("json-error: %s", msg);
 }
