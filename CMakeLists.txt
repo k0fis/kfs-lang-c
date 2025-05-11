@@ -7,6 +7,8 @@ set(SRC_DIR "src")
 set(PARSER_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(LEXER_OUT  "${PARSER_DIR}/lexer.c")
 set(PARSER_OUT "${PARSER_DIR}/parser.c")
+set(JSON_LEXER_OUT  "${PARSER_DIR}/json_lexer.c")
+set(JSON_PARSER_OUT "${PARSER_DIR}/json_parser.c")
 set(KFS_SOURCES
 		${SRC_DIR}/rt/expression.c
 		${SRC_DIR}/rt/value.c
@@ -14,14 +16,19 @@ set(KFS_SOURCES
 		${SRC_DIR}/rt/kfs_lang_env.c
 		${SRC_DIR}/rt/kfs_dict.c
 		${LEXER_OUT}
-		${PARSER_OUT})
+		${PARSER_OUT}
+		${JSON_LEXER_OUT}
+		${JSON_PARSER_OUT}
+	)
 
 find_package(BISON)
 find_package(FLEX)
 
 flex_target(LEXER "${SRC_DIR}/lexer.l" "${LEXER_OUT}" DEFINES_FILE "${PARSER_DIR}/lexer.h")
+flex_target(JSON_LEXER "${SRC_DIR}/json.l" "${JSON_LEXER_OUT}" COMPILE_FLAGS "-P zz" DEFINES_FILE "${PARSER_DIR}/json_lexer.h")
 bison_target(PARSER "${SRC_DIR}/parser.y" "${PARSER_OUT}" DEFINES_FILE "${PARSER_DIR}/parser.h")
-add_flex_bison_dependency(LEXER PARSER)
+bison_target(JSON_PARSER "${SRC_DIR}/json.y" "${JSON_PARSER_OUT}" COMPILE_FLAGS "-p zz" DEFINES_FILE "${PARSER_DIR}/json_parser.h")
+add_flex_bison_dependency(LEXER PARSER JSON_LEXER JSON_PARSER)
 
 include_directories(${SRC_DIR} ${SRC_DIR}/rt ${CMAKE_CURRENT_BINARY_DIR})
 
