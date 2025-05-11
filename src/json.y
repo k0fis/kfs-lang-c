@@ -43,7 +43,8 @@ json:
 
 value
      : LCURLY o_members[M] RCURLY { $$ = $M; }
-     | STRING                     { $$ = value_new_string($1); }
+     | STRING                     { $$ = value_new_string($1);}
+     | INTEGER                    { $$ = value_new_int($1); }
      | DECIMAL                    { $$ = value_new_double($1); }
      | LBRAC a_members[A] RBRAC   { $$ = $A; }
      | VTRUE                      { $$ = value_new_bool(1); }

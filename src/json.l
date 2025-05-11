@@ -6,7 +6,6 @@ extern void zzerror(const char *s);
 %}
 
 %option noyywrap
-%option warn nodefault
 
 %option reentrant noyywrap never-interactive nounistd
 %option bison-bridge
@@ -30,7 +29,7 @@ number    -?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?
 
 [ \t\r\n]+ {  }
 
-\"[^"]*\"  { yylval->string = strdup(yytext); return STRING; }
+\"[^"]*\"  { yylval->string = yytext+1; yylval->string[strlen(yylval->string)-1]='\0'; return STRING; }
 
 .          { KFS_ERROR("Lexical Error: unrecognized literal '%s'", yytext); }
 
