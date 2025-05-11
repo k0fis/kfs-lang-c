@@ -7,6 +7,7 @@ Expression *expression_new(OperationType type) {
   expression->dValue = 0;
   KFS_LST_INIT(expression->list);
   KFS_LST_INIT(expression->upHandle);
+  KFS_LST_INIT(expression->fceListHandle);
   expression->left = NULL;
   expression->right = NULL;
   expression->next = NULL;
@@ -112,6 +113,43 @@ Expression *expression_create_continue() {
   return expression;
 }
 
+Expression *expression_create_return(Expression *value) {
+  Expression *expression = expression_new(eRETURN);
+  if (expression == NULL) return NULL;
+  expression->left = value;
+  return expression;
+}
+
+Expression *expression_create_function(char * name, Expression *value) {
+  Expression *expression = expression_new(eFUNCTION_DEF);
+  if (expression == NULL) return NULL;
+  expression->str = strdup(name);
+  expression->left = value;
+  return expression;
+}
+
+Expression *expression_create_function_call(char * name, Expression *value) {
+  Expression *expression = expression_new(eFUNCTION_CALL);
+  if (expression == NULL) return NULL;
+  expression->str = strdup(name);
+  expression->left = value;
+  return expression;
+}
+
+Expression *expression_create_variable_empty(char * name) {
+  Expression *expression = expression_new(eSET_EMPTY);
+  if (expression == NULL) return NULL;
+  expression->str = strdup(name);
+  return expression;
+}
+
+Expression *expression_create_is_empty(char * name) {
+  Expression *expression = expression_new(eIS_EMPTY);
+  if (expression == NULL) return NULL;
+  expression->str = strdup(name);
+  return expression;
+}
+
 
 Expression *expression_delist(Expression *item) {
   if (item == NULL) return NULL;
@@ -144,6 +182,9 @@ void expression_delete(Expression *expression) {
     }
   } else if (expression->type == eObjectVALUE) {
     dict_delete(expression->object);
+  }
+  if (expression->fceListHandle.next != NULL) {
+    list_del(&expression->fceListHandle); // remove self from possible ref list
   }
   free(expression);
 }

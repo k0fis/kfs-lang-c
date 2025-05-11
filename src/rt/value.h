@@ -9,8 +9,8 @@ extern "C" {
 #endif  // __cplusplus
 
 typedef enum tagValueType {
-    Int, Double, Bool, String, List, Object,
-    FC_Break, FC_Conti
+    Int, Double, Bool, String, List, Object, Empty,
+    FC_Break, FC_Conti, FC_Return
 } ValueType;
 
 typedef struct tagValue {
@@ -35,7 +35,7 @@ Value *value_new_list();
 Value *value_new_object();
 void value_delete(Value *value);
 Value *value_copy(Value *value);
-
+Value *value_delist(Value *item);
 
 int value_list_add(Value *list, Value *value);
 Value *value_list_get(Value *list, int inx);

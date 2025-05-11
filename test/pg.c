@@ -81,28 +81,28 @@ void test_env() {
 
   info = kfs_lang_vars_to_string(env, KLVTS_ALL_SPACES); KFS_INFO2("space: %s", info); free(info);
 
-  kfs_lang_env_space_add_vars(env);
+  kfs_lang_env_space_add_vars(env, NULL);
 
   kfs_lang_set_var(env, strdup("pako-2"), value_new_int(2));
   kfs_lang_set_var(env, strdup("pako-3"), value_new_int(2));
   kfs_lang_set_var(env, strdup("pako-4"), value_new_int(2));
   info = kfs_lang_vars_to_string(env, KLVTS_ALL_SPACES); KFS_INFO2("space: %s", info); free(info);
 
-  kfs_lang_env_space_add_vars(env);
+  kfs_lang_env_space_add_vars(env, NULL);
   kfs_lang_set_var(env, strdup("pako-2"), value_new_int(3));
   kfs_lang_set_var(env, strdup("pako-3"), value_new_int(3));
   kfs_lang_set_var(env, strdup("pako-4"), value_new_int(3));
   kfs_lang_set_var(env, strdup("pako-5"), value_new_int(3));
   info = kfs_lang_vars_to_string(env, KLVTS_ALL_SPACES); KFS_INFO2("space: %s", info); free(info);
 
-  kfs_lang_env_space_add_vars(env);
+  kfs_lang_env_space_add_vars(env, NULL);
   kfs_lang_set_var(env, strdup("pako-2"), value_new_int(4));
   kfs_lang_set_var(env, strdup("pako-5"), value_new_int(4));
   kfs_lang_set_var(env, strdup("pako-6"), value_new_int(4));
   info = kfs_lang_vars_to_string(env, KLVTS_ALL_SPACES); KFS_INFO2("space: %s", info); free(info);
 
 
-  kfs_lang_env_add_space(env);
+  kfs_lang_env_add_space(env, NULL);
   info = kfs_lang_vars_to_string(env, KLVTS_ALL_SPACES); KFS_INFO2("space: %s", info); free(info);
 
   kfs_lang_set_var(env, strdup("pako-2"), value_new_int(5));

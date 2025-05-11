@@ -54,9 +54,11 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %token TOKEN_ASSIGN   "="
 %token TOKEN_IF       "if"
 %token TOKEN_ELSE     "else"
-%token TOKEN_WHILE     "while"
-%token TOKEN_BREAK     "break"
-%token TOKEN_CONTI     "continue"
+%token TOKEN_WHILE    "while"
+%token TOKEN_BREAK    "break"
+%token TOKEN_CONTI    "continue"
+%token TOKEN_RETURN   "return"
+%token TOKEN_EMPTY    "empty"
 
 %token <lValue> TOKEN_NUMBER "number"
 %token <dValue> TOKEN_DOUBLE "double"
@@ -119,11 +121,13 @@ expr
     | "(" expr[E] ")"        { $$ = $E; }
     | "[" expr_list[E] "]"   { $$ = $E; }
     | "{" named_list[E] "}"  { $$ = $E; }
+    | "empty""(""ID"[N]")"   { $$ = expression_create_is_empty($N); }
     | expr[L] "." "ID"[N]    { $$ = expression_create_dot_operation($L, $N); }
     | "number"               { $$ = expression_create_integer($1); }
     | "double"               { $$ = expression_create_double($1); }
     | "bool"                 { $$ = expression_create_bool($1); }
     | "str"                  { $$ = expression_create_string($1); }
+    | "ID"[N]"(" named_list[P] ")" { $$ = expression_create_function_call($N, $P); }
     | "ID"[N]                { $$ = expression_create_variable($N); }
     ;
 
@@ -147,12 +151,16 @@ named_list
     |                     { $$ = expression_create_object(); }
     ;
 command
-    : "ID"[N] "=" expr[R] ";"           { $$ = expression_create_variable_assign($N, $R); }
+    : "ID"[N] "=" "empty" ";"           { $$ = expression_create_variable_empty($N); }
+    | "ID"[N] "=" expr[R] ";"           { $$ = expression_create_variable_assign($N, $R); }
     | "if" "(" expr[Q] ")" inpt[T]      { $$ = expression_create_if($Q, $T, NULL); }
     | "if" "(" expr[Q] ")" inpt[T] "else" inpt[F] {
                                           $$ = expression_create_if($Q, $T, $F); }
     | "while" "(" expr[Q] ")" inpt[B]   { $$ = expression_create_while($Q, $B); }
     | "break" ";"                       { $$ = expression_create_break(); }
     | "continue" ";"                    { $$ = expression_create_continue(); }
+    | "return" expr_list[L] ";"         { $$ = expression_create_return($L); }
+    | "ID"[N]"("")""{"inpt[C]"}"        { $$ = expression_create_function($N, $C); }
+    | ";" {}
     ;
 %%

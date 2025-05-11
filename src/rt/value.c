@@ -75,6 +75,8 @@ Value *value_copy(Value *value) {
       return result;
     case FC_Break:
     case FC_Conti:
+    case FC_Return:
+    case Empty:
       return value_new(value->type);
   }
   KFS_ERROR("Error in copying values, type: %i", value->type);
@@ -143,6 +145,23 @@ void value_delete(Value *value) {
   }
 }
 
+
+Value *value_delist(Value *item) {
+  if (item == NULL) return NULL;
+  if (item->type != List) return item;
+  int cnt= 0; Value *inx, *tmp; list_for_each_entry(inx, &item->listValue, handle) {
+    cnt++;
+  }
+  if (cnt != 1) return item;
+  list_for_each_entry_safe(inx, tmp, &item->listValue, handle) {
+    list_del(&inx->handle);
+    value_delete(item);
+    return inx;
+  }
+  KFS_ERROR("Bad state!", NULL);
+  return NULL;
+}
+
 char *trim_str_buffer(char *buffer) {
   return realloc(buffer, strlen(buffer)+1);
 }
@@ -158,6 +177,10 @@ char *value_to_string(Value *value, int mode) {
         return strdup("FC_Break");
       case FC_Conti:
         return strdup("FC_Conti");
+      case FC_Return:
+        return strdup("FC_Return");
+      case Empty:
+        return strdup("");
       case Int: {
         KFS_MALLOC_CHAR(tmp, 256);
         snprintf(tmp, 255, "%i", value->iValue);

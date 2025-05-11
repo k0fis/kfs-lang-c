@@ -2,11 +2,20 @@
 #include "parser.h"
 #include "lexer.h"
 
-//
-Variables *variables_new() {
+Variables *variables_new(Value *values) {
   KFS_MALLOC(Variables, kv);
   KFS_LST_INIT(kv->lstVs);
   kv->variables = dict_new((element_free)value_delete);
+  if (values != NULL) {
+    // setup vars
+    if (values->type != Object) {
+      KFS_ERROR("Expected type for setup variables is Object, but its %i", values->type);
+    } else {
+      DictItem *inx; list_for_each_entry(inx, &values->oValue->lst, lst) {
+        dict_set(kv->variables, strdup(inx->name), value_copy((Value*)inx->data),KFS_DICT_SET_NORMAL );
+      }
+    }
+  }
   return kv;
 }
 
@@ -50,8 +59,8 @@ char *variables_to_string(Variables *kv){
 
 //
 
-void var_stack_add_variables(VarStack *vs) {
-  list_add(&variables_new()->lstVs, &vs->variablesStack);
+void var_stack_add_variables(VarStack *vs, Value *value) {
+  list_add(&variables_new(value)->lstVs, &vs->variablesStack);
 }
 
 int var_stack_remove_variables(VarStack *vs) {
@@ -63,11 +72,11 @@ int var_stack_remove_variables(VarStack *vs) {
   return 0;
 }
 
-VarStack *var_stack_new(){
+VarStack *var_stack_new(Value *variables){
   KFS_MALLOC(VarStack, kvs);
   KFS_LST_INIT(kvs->variablesStack);
   KFS_LST_INIT(kvs->lstEnv);
-  var_stack_add_variables(kvs);
+  var_stack_add_variables(kvs, variables);
   return kvs;
 }
 
@@ -132,14 +141,16 @@ char *var_stack_to_string(VarStack *vs) {
 KfsLangEnv *kfs_lang_env_new() {
   KFS_MALLOC(KfsLangEnv, env);
   KFS_LST_INIT(env->varStackStack);
+  KFS_LST_INIT(env->functions);
   env->expression = NULL;
+  env->empty = value_new(Empty);
   env->useStringSysReplace = 1;
   char *regexStr = "{{[^ }]+}}";
   if (regcomp(&(env->stringSysReplace), regexStr, REG_EXTENDED)) {
     KFS_ERROR("Could not compile regex: %s", regexStr);
     env->useStringSysReplace = 0;
   }
-  kfs_lang_env_add_space(env);
+  kfs_lang_env_add_space(env, NULL);
   return env;
 }
 
@@ -150,19 +161,28 @@ void varStackStack_cleanup(KfsLangEnv *kfsLangEnv) {
   }
 }
 
+void kfs_lang_env_cleanup_functions(KfsLangEnv *kfsLangEnv) {
+  // exprtession will be deleted in expression list
+  Expression *inx, *tmp; list_for_each_entry_safe(inx, tmp, &kfsLangEnv->functions, upHandle) {
+    list_del(&inx->upHandle);
+  }
+}
+
 void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv) {
   if (kfsLangEnv != NULL) {
+    kfs_lang_env_cleanup_functions(kfsLangEnv);
     if (kfsLangEnv->expression != NULL) {
       expression_delete(kfsLangEnv->expression);
     }
     regfree(&(kfsLangEnv->stringSysReplace));
     varStackStack_cleanup(kfsLangEnv);
+    value_delete(kfsLangEnv->empty);
     free(kfsLangEnv);
   }
 }
 
-VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv) {
-  VarStack *vs = var_stack_new();
+VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv, Value *variables) {
+  VarStack *vs = var_stack_new(variables);
   if (vs == NULL) {
     KFS_ERROR("Cannot initialize new VarStack", NULL);
     return NULL;
@@ -185,12 +205,12 @@ VarStack *kfs_lang_env_actual_space(KfsLangEnv *kfsLangEnv) {
   return list_first_entry(&kfsLangEnv->varStackStack, VarStack, lstEnv);
 }
 
-void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv) {
+void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv, Value *value) {
   VarStack *lastVs = kfs_lang_env_actual_space(kfsLangEnv);
   if (lastVs == NULL) {
     KFS_ERROR("Cannot find last variable spaces", NULL);
   } else {
-    var_stack_add_variables(lastVs);
+    var_stack_add_variables(lastVs, value);
   }
 }
 
@@ -204,7 +224,11 @@ void kfs_lang_env_space_del_vars(KfsLangEnv *kfsLangEnv) {
 }
 
 Value *kfs_lang_get_var(KfsLangEnv *kfsLangEnv, char *name) {
-  return var_stack_get(kfs_lang_env_actual_space(kfsLangEnv), name);
+  Value *ret = var_stack_get(kfs_lang_env_actual_space(kfsLangEnv), name);
+  if (ret == NULL) {
+    return kfsLangEnv->empty;
+  }
+  return ret;
 }
 
 void kfs_lang_set_var(KfsLangEnv *kfsLangEnv, char *name, Value *value) {
@@ -307,13 +331,12 @@ Value *eval_string(KfsLangEnv *env, char *value) {
   return value_new_string(value);
 }
 
-Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
+Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e, int options) {
   if (e == NULL) {
     return NULL;
   }
   Value *lv, *rv, *result;
   Expression *expr;
-  int iny;
 
   switch (e->type) {
     case eBREAK:
@@ -335,9 +358,12 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
         return NULL;
       }
       Expression *inx; list_for_each_entry(inx, &e->list, upHandle) {
-        rv = kfs_lang_eval_value(kfsLangEnv, inx);
+        rv = kfs_lang_eval_value(kfsLangEnv, inx, KLE_EVAL_NORMAL);
         if (rv != NULL) {
-          if ((rv->type == FC_Break) || (rv->type == FC_Conti)) {
+          //if ((options & KLE_EVAL_FCE_CALL) && (rv->type == FC_Return)) {
+            // remove return
+          //}
+          if ((rv->type == FC_Break) || (rv->type == FC_Conti) || (rv->type == FC_Return)) {
             value_delete(lv);
             return rv;
           }
@@ -348,71 +374,71 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eObjectVALUE:
       lv = value_new_object();
       DictItem *iny; list_for_each_entry(iny, &e->object->lst, lst) {
-        value_object_add(lv, iny->name, kfs_lang_eval_value(kfsLangEnv, (Expression *)iny->data));
+        value_object_add(lv, iny->name, kfs_lang_eval_value(kfsLangEnv, (Expression *)iny->data, KLE_EVAL_FCE_CALL));
       }
       return lv;
     case eMULTIPLY:
-      result = value_mul((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_mul((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eADD:
-      result = value_plus((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_plus((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eMINUS:
-      result = value_minus((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_minus((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eDIVIDE:
-      result = value_divide((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_divide((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eMODULO:
-      result = value_mod((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_mod((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case ePOWER:
-      result = value_power((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_power((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eLT:
-      result = value_lt((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_lt((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eLE:
-      result = value_le((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_le((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eEQ:
-      result = value_eq((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_eq((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eNE:
-      result = value_ne((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_ne((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eGT:
-      result = value_gt((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_gt((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eGE:
-      result = value_ge((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_ge((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eAND:
-      result = value_and((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_and((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eOR:
-      result = value_or((lv = kfs_lang_eval_value(kfsLangEnv, e->left)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right)));
+      result = value_or((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)), (rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL)));
       value_delete(lv); value_delete(rv);
       return result;
     case eNOT:
-      result = value_not((lv = kfs_lang_eval_value(kfsLangEnv, e->left)));
+      result = value_not((lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL)));
       value_delete(lv);
       return result;
     case eUNARY_MINUS:
-      result = kfs_lang_eval_value(kfsLangEnv, e->left);
+      result = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
       if (result->type == Int) {
         result->iValue = -1*result->iValue;
       } else if (result->type == Double) {
@@ -420,7 +446,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       }
       return result;
     case eDOT:
-      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
       if (lv == NULL) {
         KFS_ERROR("Cannot evaluate object", NULL);
         return NULL;
@@ -442,7 +468,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       value_delete(lv);
       return result;
     case eARRAY_ACCESS:
-      rv = kfs_lang_eval_value(kfsLangEnv, e->right);
+      rv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL);
       if (rv->type != Int) {
         KFS_ERROR("Array access - index type must be INT (%i)", rv->type);
         value_delete(rv);
@@ -450,7 +476,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       }
       int position = rv->iValue;
       value_delete(rv);
-      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
       if (lv->type != List) {
         KFS_ERROR("Array access to non-array value (%i)", lv->type);
         value_delete(lv);
@@ -468,10 +494,12 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       value_delete(lv);
       return result;
     case eINT:
-      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
       switch (lv->type) {
         case FC_Break:
+        case FC_Return:
         case FC_Conti:
+        case Empty:
           KFS_ERROR("Cannot convert Flow-Controll into int", NULL);
           return NULL;
         case String:
@@ -493,7 +521,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
     case eVAR:
       return value_copy(kfs_lang_get_var(kfsLangEnv, e->str));
     case eASSIGN_VAR:
-      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
       if (lv != NULL) {
         kfs_lang_set_var(kfsLangEnv, strdup(e->str), value_copy(lv));
       } else {
@@ -501,12 +529,12 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       }
       return lv;
     case eBLOCK:
-      kfs_lang_env_space_add_vars(kfsLangEnv);
-      lv = kfs_lang_eval_value(kfsLangEnv, e->left);
+      kfs_lang_env_space_add_vars(kfsLangEnv, NULL);
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
       kfs_lang_env_space_del_vars(kfsLangEnv);
       return lv;
     case eIF:
-      result = kfs_lang_eval_value(kfsLangEnv, e->next);
+      result = kfs_lang_eval_value(kfsLangEnv, e->next, KLE_EVAL_NORMAL);
       int block = 0; // false
       if (result == NULL) {
         KFS_ERROR("Empty result", NULL);
@@ -519,10 +547,10 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       }
       value_delete(result);
       if (block)
-        return kfs_lang_eval_value(kfsLangEnv, e->right);
-      return kfs_lang_eval_value(kfsLangEnv, e->left);
+        return kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL);
+      return kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
     case eWHILE:
-      result = kfs_lang_eval_value(kfsLangEnv, e->next);
+      result = kfs_lang_eval_value(kfsLangEnv, e->next, KLE_EVAL_NORMAL);
       if (result == NULL) {
         KFS_ERROR("Empty result", NULL);
         return NULL;
@@ -534,16 +562,67 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e) {
       }
       while (result->iValue) {
         value_delete(result); result = NULL;
-        lv = kfs_lang_eval_value(kfsLangEnv, e->right);
+        lv = kfs_lang_eval_value(kfsLangEnv, e->right, KLE_EVAL_NORMAL);
+        if (lv->type == FC_Return) {
+          return lv;
+        }
         if (lv->type == FC_Break) {
           value_delete(lv);
           break;
         }
         value_delete(lv);
-        result = kfs_lang_eval_value(kfsLangEnv, e->next);
+        result = kfs_lang_eval_value(kfsLangEnv, e->next, KLE_EVAL_NORMAL);
       }
       value_delete(result);
       return NULL;
+    case eRETURN:
+      lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
+      if (lv->type != List) {
+        rv = value_new_list();
+        value_list_add(rv, lv);
+      } else {
+        rv = lv;
+      }
+      rv->type = FC_Return; // a little hack, let's will see some problems
+      return rv;
+    case eFUNCTION_DEF:
+      // remove old definition
+      list_for_each_entry(expr, &kfsLangEnv->functions, fceListHandle) {
+        if (!strcmp(e->str, expr->str)) {
+          list_del(&expr->fceListHandle);
+          break;
+        }
+      }
+      list_add(&e->fceListHandle, &kfsLangEnv->functions);
+      return NULL;
+    case eFUNCTION_CALL:
+      expr = NULL; list_for_each_entry(expr, &kfsLangEnv->functions, fceListHandle) {
+        if (!strcmp(e->str, expr->str)) {
+          break;
+        }
+      }
+      if (expr == NULL) {
+        KFS_ERROR("Cannot find function %s", e->str);
+        return NULL;
+      }
+      rv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
+      kfs_lang_env_add_space(kfsLangEnv, rv);
+      value_delete(rv);
+      lv = kfs_lang_eval_value(kfsLangEnv, expr->left, KLE_EVAL_FCE_CALL);
+      kfs_lang_env_remove_space(kfsLangEnv);
+
+      if (lv != NULL) {
+        if (lv->type == FC_Return) {
+          lv->type = List; // remove hack
+        }
+        return value_delist(lv);
+      }
+      return NULL;
+    case eSET_EMPTY:
+      //
+      return NULL;
+    case eIS_EMPTY:
+      return value_new_bool(kfs_lang_get_var(kfsLangEnv, e->str)->type == Empty);
   }
   return NULL;
 }
@@ -561,7 +640,7 @@ Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code) {
   // remove last variables
   varStackStack_cleanup(kfsLangEnv);
   // and prepare new space
-  kfs_lang_env_add_space(kfsLangEnv);
+  kfs_lang_env_add_space(kfsLangEnv, NULL);
 
 
   if (yylex_init(&scanner)) {
@@ -575,13 +654,16 @@ Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code) {
   }
   yy_delete_buffer(state, scanner);
   yylex_destroy(scanner);
-  Value *result = kfs_lang_eval_value(kfsLangEnv, kfsLangEnv->expression);
-
+  Value *result = kfs_lang_eval_value(kfsLangEnv, kfsLangEnv->expression, KLE_EVAL_NORMAL);
+  if (result->type == FC_Return) {
+    result->type = List; // remove hack
+  }
   if (kfsLangEnv->expression != NULL) {
+    kfs_lang_env_cleanup_functions(kfsLangEnv);
     expression_delete(kfsLangEnv->expression);
     kfsLangEnv->expression = NULL;
   }
 
 
-  return result;
+  return value_delist(result);
 }

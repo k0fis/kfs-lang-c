@@ -37,15 +37,18 @@ typedef struct tagKfsLangEnv {
    ll_t varStackStack;
    regex_t stringSysReplace;
    int useStringSysReplace;
+
+    ll_t functions;
+    Value *empty;
 } KfsLangEnv;
 
 KfsLangEnv *kfs_lang_env_new();
 void kfs_lang_env_delete(KfsLangEnv *kfsLangEnv);
 
-VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv);
+VarStack *kfs_lang_env_add_space(KfsLangEnv *kfsLangEnv, Value *variables);
 void kfs_lang_env_remove_space(KfsLangEnv *kfsLangEnv);
 
-void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv);
+void kfs_lang_env_space_add_vars(KfsLangEnv *kfsLangEnv, Value *value);
 void kfs_lang_env_space_del_vars(KfsLangEnv *kfsLangEnv);
 
 Value *kfs_lang_get_var(KfsLangEnv *kfsLangEnv, char *name);
@@ -55,6 +58,9 @@ void kfs_lang_set_var(KfsLangEnv *kfsLangEnv, char *name, Value *value);
 #define KLVTS_ALL_SPACES        0x2
 
 char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode);
+
+#define KLE_EVAL_NORMAL   0x1
+#define KLE_EVAL_FCE_CALL 0x2
 
 Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code);
 

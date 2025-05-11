@@ -4,7 +4,13 @@
 
 Value *value_plus(Value *left, Value *right) {
   char buffer[BUFF_SIZE];
+  if (left->type == Empty) {
+    return value_copy(right);
+  }
   if (left->type == Int) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_int(left->iValue + right->iValue);
     }
@@ -22,6 +28,9 @@ Value *value_plus(Value *left, Value *right) {
     }
   }
   if (left->type == Double) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_double(left->dValue + right->iValue);
     }
@@ -39,6 +48,9 @@ Value *value_plus(Value *left, Value *right) {
     }
   }
   if (left->type == Bool) {
+      if (right->type == Empty) {
+        return value_copy(left);
+      }
       if (right->type == Bool) {
          return value_new_bool( left->iValue || right->iValue );
       }
@@ -53,6 +65,9 @@ Value *value_plus(Value *left, Value *right) {
       }
   }
   if (left->type == String) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
       buffer[0] = '\0';
       if (right->type == Int) {
         snprintf(buffer, BUFF_SIZE, "%i", right->iValue);
@@ -84,7 +99,13 @@ Value *value_plus(Value *left, Value *right) {
 }
 
 Value *value_minus(Value *left, Value *right) {
+  if (left->type == Empty) {
+    return value_copy(right);
+  }
   if (left->type == Int) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_int(left->iValue - right->iValue);
     }
@@ -93,6 +114,9 @@ Value *value_minus(Value *left, Value *right) {
     }
   }
   if (left->type == Double) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_double(left->dValue - right->iValue);
     }
@@ -104,7 +128,13 @@ Value *value_minus(Value *left, Value *right) {
 }
 
 Value *value_mul(Value *left, Value *right) {
+  if (left->type == Empty) {
+    return value_copy(right);
+  }
   if (left->type == Int) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_int(left->iValue * right->iValue);
     }
@@ -113,6 +143,9 @@ Value *value_mul(Value *left, Value *right) {
     }
   }
   if (left->type == Double) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_double(left->dValue * right->iValue);
     }
@@ -129,7 +162,13 @@ Value *value_mul(Value *left, Value *right) {
 }
 
 Value *value_divide(Value *left, Value *right) {
+  if (left->type == Empty) {
+    return value_copy(right);
+  }
   if (left->type == Int) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_int(left->iValue / right->iValue);
     }
@@ -138,6 +177,9 @@ Value *value_divide(Value *left, Value *right) {
     }
   }
   if (left->type == Double) {
+    if (right->type == Empty) {
+      return value_copy(left);
+    }
     if (right->type == Int) {
       return value_new_double(left->dValue / right->iValue);
     }

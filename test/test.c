@@ -169,6 +169,9 @@ int main(void) {
     eval_l(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1;} d=b;");
     eval_l(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1; if (a<3) {break;} } d=b;");
     //eval_l(kfsLangEnv, "a = 5; b = 0; break; d=b;");
+    eval_l(kfsLangEnv, "a = 1; pako() {return a+5; } b = pako(a:5); d=b;");
+    eval_i(kfsLangEnv, "pako() {c = 2; return a+c,a,c; } b= pako(a:4); return b[0];", 6);
+    eval_l(kfsLangEnv, "pako() {if (empty(c)) c = 11; c=c+2; return a+c,a,c; } return pako(a:18);");
 
    KFS_INFO("end test");
    kfs_lang_env_delete(kfsLangEnv);
