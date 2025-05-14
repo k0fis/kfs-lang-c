@@ -104,18 +104,18 @@ int main(void) {
    CE("string with replace sys env", eval(kfsLangEnv, " \"{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil\" ", "popici pako je defo a je to -popici- a nebo taky -{{napicu2}}popici- debil", NULL, NULL, 0));
    CE("string w/o replace sys", eval(kfsLangEnv, " '{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil' ", "{{napicu}} pako je defo a je to -{{napicu}}- a nebo taky -{{napicu2}}{{napicu}}- debil", NULL, NULL, 0));
 
-    iExpected = 1; CE("assign", eval(kfsLangEnv, "a = 1;", NULL, &iExpected, NULL, 0));
-    iExpected = 3; CE("if", eval(kfsLangEnv, "if (false) b = 2; else b = 3;", NULL, &iExpected, NULL, 0));
-    iExpected = 2; CE("if", eval(kfsLangEnv, "if (true) b = 2; else b = 3;", NULL, &iExpected, NULL, 0));
-    iExpected = 3; CE("vars", eval(kfsLangEnv, "a = 1; n=2; return a+n;", NULL, &iExpected, NULL, 0));
-    CE("in block assign", eval(kfsLangEnv, "{ a = 1; n=2; }",  NULL, NULL, NULL, 0));
+   iExpected = 1; CE("assign", eval(kfsLangEnv, "a = 1;", NULL, &iExpected, NULL, 0));
+   iExpected = 3; CE("if", eval(kfsLangEnv, "if (false) b = 2; else b = 3;", NULL, &iExpected, NULL, 0));
+   iExpected = 2; CE("if", eval(kfsLangEnv, "if (true) b = 2; else b = 3;", NULL, &iExpected, NULL, 0));
+   iExpected = 3; CE("vars", eval(kfsLangEnv, "a = 1; n=2; return a+n;", NULL, &iExpected, NULL, 0));
+   CE("in block assign", eval(kfsLangEnv, "{ a = 1; n=2; }",  NULL, NULL, NULL, 0));
 
-    iExpected = 14; CE("set vars", eval(kfsLangEnv, "a=12; if (true) {a = 2;} else {a=3;} c = 1+a; return a+12;", NULL, &iExpected, NULL, 0));
-    iExpected = 15; CE("cycle", eval(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1;} return b;", NULL, &iExpected, NULL, 0));
-    iExpected = 12; CE("cycle + break", eval(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1; if (a<3) {break;} } return b;", NULL, &iExpected, NULL, 0));
-    iExpected = 10; CE("function", eval(kfsLangEnv, "a = 1; pako() {return a+5; } b = pako(a:5); return b;", NULL, &iExpected, NULL, 0));
-    iExpected =  6; CE("function multi return", eval(kfsLangEnv, "pako() {c = 2; return a+c,a,c; } b= pako(a:4); return b[0];", NULL, &iExpected, NULL, 0));
-    iExpected = 31; CE("empty var", eval(kfsLangEnv, "pako() {if (empty(c)) c = 11; c=c+2; return a+c,a,c; } return pako(a:18)[0];", NULL, &iExpected, NULL, 0));
+   iExpected = 14; CE("set vars", eval(kfsLangEnv, "a=12; if (true) {a = 2;} else {a=3;} c = 1+a; return a+12;", NULL, &iExpected, NULL, 0));
+   iExpected = 15; CE("cycle", eval(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1;} return b;", NULL, &iExpected, NULL, 0));
+   iExpected = 12; CE("cycle + break", eval(kfsLangEnv, "a = 5; b = 0; while (a > 0) {b = b+a; a = a-1; if (a<3) {break;} } return b;", NULL, &iExpected, NULL, 0));
+   iExpected = 10; CE("function", eval(kfsLangEnv, "a = 1; pako() {return a+5; } b = pako(a:5); return b;", NULL, &iExpected, NULL, 0));
+   iExpected =  6; CE("function multi return", eval(kfsLangEnv, "pako() {c = 2; return a+c,a,c; } b= pako(a:4); return b[0];", NULL, &iExpected, NULL, 0));
+   iExpected = 31; CE("empty var", eval(kfsLangEnv, "pako() {if (empty(c)) c = 11; c=c+2; return a+c,a,c; } return pako(a:18)[0];", NULL, &iExpected, NULL, 0));
 
    KFS_INFO("end test");
    kfs_lang_env_delete(kfsLangEnv);
