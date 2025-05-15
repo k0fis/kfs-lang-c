@@ -15,6 +15,7 @@ set(KFS_SOURCES
 		${SRC_DIR}/rt/value_ops.c
 		${SRC_DIR}/rt/kfs_lang_env.c
 		${SRC_DIR}/rt/kfs_dict.c
+		${SRC_DIR}/rt/json.c
 		${LEXER_OUT}
 		${PARSER_OUT}
 		${JSON_LEXER_OUT}
@@ -32,11 +33,13 @@ add_flex_bison_dependency(LEXER PARSER JSON_LEXER JSON_PARSER)
 
 include_directories(${SRC_DIR} ${SRC_DIR}/rt ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(kfs_lang_test test/test.c ${KFS_SOURCES})
-add_executable(kfs_lang_pg   test/pg.c   ${KFS_SOURCES})
+add_executable(kfs-lang      src/rt/main.c ${KFS_SOURCES})
+add_executable(kfs_lang_test test/test.c   ${KFS_SOURCES})
+add_executable(kfs_lang_pg   test/pg.c     ${KFS_SOURCES})
 
+target_include_directories(kfs_lang      PRIVATE ${PARSER_DIR} ${SRC_DIR})
 target_include_directories(kfs_lang_test PRIVATE ${PARSER_DIR} ${SRC_DIR})
-target_include_directories(kfs_lang_pg PRIVATE ${PARSER_DIR} ${SRC_DIR})
+target_include_directories(kfs_lang_pg   PRIVATE ${PARSER_DIR} ${SRC_DIR})
 
 enable_testing()
 
