@@ -3,6 +3,19 @@ project(kfs_lang C)
 
 set(CMAKE_C_STANDARD 11)
 
+find_package(Git QUIET)
+
+execute_process(
+		COMMAND ${GIT_EXECUTABLE} describe --tags --always
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+		OUTPUT_VARIABLE GIT_TAG
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		RESULT_VARIABLE GIT_RESULT
+)
+FILE(WRITE ${CMAKE_BINARY_DIR}/version.h
+		"\#define VERSION \"${GIT_TAG}\"\n"
+)
+
 set(SRC_DIR "src")
 set(PARSER_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(LEXER_OUT  "${PARSER_DIR}/lexer.c")
