@@ -1,6 +1,6 @@
 #include "json.h"
 
-Value *json_read_string(char *jsonStr, Value **output) {
+int json_read_string(char *jsonStr, Value **output) {
     zzscan_t scanner;
     YY_BUFFER_STATE state;
 
@@ -9,9 +9,9 @@ Value *json_read_string(char *jsonStr, Value **output) {
         return -1;
     }
 
-    state = zz_scan_string(json, scanner);
+    state = zz_scan_string(jsonStr, scanner);
     if (zzparse(output, scanner)) {
-        KFS_ERROR("Cannot parse json %s", json);
+        KFS_ERROR("Cannot parse json %s", jsonStr);
         return -2;
     }
 
@@ -19,7 +19,7 @@ Value *json_read_string(char *jsonStr, Value **output) {
     zzlex_destroy(scanner);
 
     if (output == NULL) {
-        KFS_ERROR("Cannot parse json %s, result is NULL", json);
+        KFS_ERROR("Cannot parse json %s, result is NULL", jsonStr);
         return -3;
     }
     return 0;

@@ -62,6 +62,7 @@ char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode);
 #define KLE_EVAL_NORMAL   0x1
 #define KLE_EVAL_FCE_CALL 0x2
 
+Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e, int options);
 Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code);
 
 #if defined(__cplusplus)

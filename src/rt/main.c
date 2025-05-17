@@ -1,37 +1,36 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 
+#include "kfs_lang_env.h"
 #include "utils.h"
+#include "parser.h"
+#include "lexer.h"
 
 int main(int argc, char *argv[]) {
-
-    int result = 0;
-    FILE *fOut = stdout, *fIn = stdin;
-
-    /* skip over program name */
-    ++argv, --argc;
-    if ( argc > 0 ) {
-        fIn = fopen( argv[0], "r" );
+    yyscan_t scanner;
+    int res = 0;
+    if (yylex_init(&scanner)) {
+        KFS_ERROR("Cannot init yylex", NULL);
+        return -101;
     }
+    KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
-    while (true) {
-
-        result = getWord(fIn);
-
-        if (result == -11) {
-            printf(" %i ", result); printf("--> EOF");
-            break;
+    if (yyparse(kfsLangEnv, scanner)) {
+        KFS_ERROR("Cannot parse code", NULL);
+        res = -102;
+    } else {
+        Value *result = kfs_lang_eval_value(kfsLangEnv, kfsLangEnv->expression, KLE_EVAL_NORMAL);
+        if (result->type == FC_Return) {
+            result->type = List; // remove hack
         }
-        if (result < 0) {
-            printf(" %i ", result); printf("--> <0");
-            /*continue;*/
-            break;
-        }
+        result = value_delist(result);
 
-        fprintf(fOut, " => %i", result);
+        char *valStr = value_to_string(result, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+        KFS_INFO(valStr);
+        free(valStr);
+
+        value_delete(result);
     }
+    yylex_destroy(scanner);
 
-    fprintf(fOut, "\n\n done \n ");
-    exit(EXIT_SUCCESS);
+    kfs_lang_env_delete(kfsLangEnv);
+    return res;
 }
