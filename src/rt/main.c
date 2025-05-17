@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
         result = value_delist(result);
 
         char *valStr = value_to_string(result, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
-        KFS_INFO(valStr);
+        printf("%s\n", valStr);
         free(valStr);
 
         value_delete(result);
