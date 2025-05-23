@@ -19,9 +19,15 @@
 #define KFS_MALLOC(type, ptr) \
   type * ptr; \
   if (NULL == (ptr = malloc(sizeof(type)))) { \
-    KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(ptr)); \
+    KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
     return NULL; \
   }\
+
+#define KFS_MALLOC2(type, ptr) \
+type * ptr; \
+if (NULL == (ptr = malloc(sizeof(type)))) { \
+KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
+}\
 
 #define KFS_MALLOC_CHAR(ptr, len) \
   char * ptr; \
@@ -49,5 +55,8 @@
   #define KFS_TRACE(fmt, ...)
 #endif
 
+#define RET_OK  0
+#define RET_ALLOC_ERROR  -1000
+#define RET_BAD_PARAMETERS_ERROR  -1001
 
 #endif

@@ -4,9 +4,12 @@
 #include "parser.h"
 #include "lexer.h"
 #include "version.h"
+#include "rt/options.h"
+
+
 
 int main(int argc, char *argv[]) {
-    printf("kfs-lang v: %s\n", VERSION);
+    printf("kfs-lang version %s\n", VERSION);
     yyscan_t scanner;
     int res = 0;
     if (yylex_init(&scanner)) {

@@ -2,6 +2,8 @@
 #include "value.h"
 #include "json.h"
 
+#include "rt/options.h"
+
 int test_json(char *json) {
 
     Value *output;
@@ -22,11 +24,20 @@ int test_json(char *json) {
     return 0;
 }
 
-int main() {
+void main_test_json() {
     test_json("{}");
     test_json("{ \"a\" : 1  }");
     test_json("{ \"b\" : 1.9  }");
     test_json("{ \"c\" : \"aaa\"  }");
     test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41  }");
     test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41, \"g\": [[[1, 2]], 1]  }");
+}
+
+void main(int argc, char *argv[]) {
+    Options *options;
+    options_create(&options);
+
+    options_fulfill(options, argc, argv);
+
+    options_delete(options);
 }
