@@ -17,6 +17,7 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %lex-param   { yyscan_t scanner }
 %parse-param { KfsLangEnv *kfsLangEnv }
 %parse-param { yyscan_t scanner }
+%define parse.error verbose
 
 %union {
     int  lValue;

@@ -3,24 +3,44 @@
 #include "utils.h"
 #include "parser.h"
 #include "lexer.h"
+#include "env.h"
 #include "version.h"
 #include "rt/options.h"
 
-
-
 int main(int argc, char *argv[]) {
-    printf("kfs-lang version %s\n", VERSION);
     yyscan_t scanner;
-    int res = 0;
+    int res = RET_OK;
     if (yylex_init(&scanner)) {
         KFS_ERROR("Cannot init yylex", NULL);
-        return -101;
+        return RET_CANNOT_INIT_LEX_ERROR;
+    }
+
+    Options *options; options_create(&options);
+    res = options_fulfill(options, argc, argv);
+    if (res != RET_OK) {
+        yylex_destroy(scanner);
+        options_delete(options);
+        return res;
+    }
+
+    if (options->printVersion) {
+        printf("kfs-lang version %s\n", VERSION);
+    }
+    StrList *inx, *tmp; list_for_each_entry_safe(inx, tmp, &options->envs, handle) {
+        if (options->verbose) {
+            printf("load env file: %s\n", inx->str);
+        }
+        env_load_file(inx->str, options);
+        list_del(&inx->handle);
+        str_list_delete(inx);
     }
     KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
+    // cycle scripts
+
     if (yyparse(kfsLangEnv, scanner)) {
         KFS_ERROR("Cannot parse code", NULL);
-        res = -102;
+        res = RET_CANNOT_PARSE_CODE_ERROR;
     } else {
         Value *result = kfs_lang_eval_value(kfsLangEnv, kfsLangEnv->expression, KLE_EVAL_NORMAL);
         if (result->type == FC_Return) {
@@ -35,7 +55,7 @@ int main(int argc, char *argv[]) {
         value_delete(result);
     }
     yylex_destroy(scanner);
-
     kfs_lang_env_delete(kfsLangEnv);
+    options_delete(options);
     return res;
 }

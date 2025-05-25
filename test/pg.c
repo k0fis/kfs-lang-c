@@ -1,6 +1,8 @@
+#include "env.h"
 #include "rt/utils.h"
 #include "value.h"
 #include "json.h"
+#include "rt/env.h"
 
 #include "rt/options.h"
 
@@ -33,11 +35,20 @@ void main_test_json() {
     test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41, \"g\": [[[1, 2]], 1]  }");
 }
 
-void main(int argc, char *argv[]) {
+void main_test_options(int argc, char *argv[]) {
     Options *options;
     options_create(&options);
-
     options_fulfill(options, argc, argv);
 
     options_delete(options);
+}
+
+int main() {
+    Options *options;
+    options_create(&options);
+    options->verbose = TRUE;
+    int ret = env_load_file("../test/test.env", options);
+    options_delete(options);
+
+    return ret;
 }

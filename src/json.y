@@ -17,6 +17,7 @@ void zzerror(Value **output, yyscan_t scanner, const char *msg);
 %lex-param   { zzscan_t scanner }
 %parse-param { Value  **output  }
 %parse-param { zzscan_t scanner }
+%define parse.error verbose
 
 %union {
   char *string;

@@ -32,13 +32,19 @@ int options_create(Options **opts) {
         return RET_ALLOC_ERROR;
     }
     KFS_LST_INIT(options->scripts);
+    KFS_LST_INIT(options->envs);
     options->printVersion = FALSE;
+    options->verbose = FALSE;
     *opts = options;
     return RET_OK;
 }
 
 int options_delete(Options *opts) {
     StrList *inx, *tmp; list_for_each_entry_safe(inx, tmp, &opts->scripts, handle) {
+        list_del(&inx->handle);
+        str_list_delete(inx);
+    }
+    list_for_each_entry_safe(inx, tmp, &opts->envs, handle) {
         list_del(&inx->handle);
         str_list_delete(inx);
     }
@@ -56,20 +62,34 @@ int options_scripts_sdd(Options *options, const char *str) {
     return RET_OK;
 }
 
+int options_envs_sdd(Options *options, const char *str) {
+    StrList *lst;
+    if (str_list_create(str, &lst) != RET_OK) {
+        KFS_ERROR("Cannot add string into list", NULL);
+        return RET_ALLOC_ERROR;
+    }
+    list_add_tail(&lst->handle,&options->envs);
+    return RET_OK;
+}
+
 int options_fulfill(Options *options, const int argv, char **argc) {
     int opt;
-    while ((opt = getopt(argv, argc, "vs:")) != EOF) {
+    while ((opt = getopt(argv, argc, "vis:e:")) != EOF) {
         switch(opt) {
             case 'v':
-                KFS_INFO("Options version");
+                options->verbose = TRUE;
+                break;
+            case 'i':
                 options->printVersion = TRUE;
                 break;
             case 's':
-                KFS_INFO2("Options script %s", optarg);
                 options_scripts_sdd(options, optarg);
                 break;
+            case 'e':
+                options_envs_sdd(options, optarg);
+                break;
             default: ;
-                KFS_ERROR("Usage: %s [-v] [-s script]", basename(argc[0]));
+                fprintf(stderr, "Usage: %s [-i] [-v] [-e env_file] [-s script]\n\t\ti version info\n\t\tv verbose\n\n", basename(argc[0]));
                 return RET_BAD_PARAMETERS_ERROR;
         }
     }

@@ -55,8 +55,16 @@ KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
   #define KFS_TRACE(fmt, ...)
 #endif
 
-#define RET_OK  0
-#define RET_ALLOC_ERROR  -1000
-#define RET_BAD_PARAMETERS_ERROR  -1001
+#define RET_OK                           0
+#define RET_ALLOC_ERROR              -1000
+#define RET_BAD_PARAMETERS_ERROR     -1001
+#define RET_CANNOT_INIT_LEX_ERROR    -1002
+#define RET_CANNOT_PARSE_CODE_ERROR  -1003
+#define RET_ENV_NULL_KEY             -1004
+#define RET_ENV_MEMORY_ERROR         -1005
+#define RET_ENV_UNKNOWN_ERROR        -1006
+#define RET_ENV_CANNOT_INIT_SCANNER  -1007
+#define RET_ENV_CANNOT_PARSE_ENV     -1008
+#define RET_ENV_CANNOT_OPEN_FILE     -1009
 
 #endif
