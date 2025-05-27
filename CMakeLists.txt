@@ -1,26 +1,17 @@
 cmake_minimum_required(VERSION 3.31)
-project(kfs_lang C)
-
+project(kfs-lang VERSION 0.7.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
+include(GNUInstallDirs)
 
 find_package(Git QUIET)
 
-function(get_version_from_git)
-	execute_process(
-			COMMAND ${GIT_EXECUTABLE} describe --tags --always
-			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-			OUTPUT_VARIABLE GIT_TAG
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-			RESULT_VARIABLE GIT_RESULT
-	)
-	string(TIMESTAMP NOW "%Y-%m-%d_%H:%M:%S")
-	FILE(WRITE ${CMAKE_BINARY_DIR}/version.h
-			"\#define VERSION \"tag ${GIT_TAG} compiled ${NOW}\"\n"
-	)
-endfunction()
+string(TIMESTAMP NOW "%Y-%m-%d_%H:%M:%S")
+execute_process(COMMAND git tag -fa ${PROJECT_VERSION} -m "tag ${PROJECT_VERSION} - ${NOW}" )
+FILE(WRITE ${CMAKE_BINARY_DIR}/version.h
+			"\#define VERSION \"tag ${PROJECT_VERSION} compiled ${NOW}\"\n"
+)
 
-get_version_from_git()
-set(SRC_DIR "src")
+set(SRC_DIR         "src")
 set(PARSER_DIR      "${CMAKE_CURRENT_BINARY_DIR}")
 set(LEXER_OUT       "${PARSER_DIR}/lexer.c")
 set(PARSER_OUT      "${PARSER_DIR}/parser.c")
@@ -58,21 +49,22 @@ add_flex_bison_dependency(LEXER PARSER JSON_LEXER JSON_PARSER)
 
 include_directories(${SRC_DIR} ${SRC_DIR}/rt ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(kfs-lang      ${SRC_DIR}/rt/main.c ${KFS_SOURCES})
-add_executable(kfs_lang_test test/test.c          ${KFS_SOURCES})
-add_executable(kfs_lang_pg   test/pg.c            ${KFS_SOURCES})
+add_executable(${PROJECT_NAME} ${SRC_DIR}/rt/main.c ${KFS_SOURCES})
+add_executable(kfs_lang_test   test/test.c          ${KFS_SOURCES})
+add_executable(kfs_lang_pg     test/pg.c            ${KFS_SOURCES})
 
-target_include_directories(kfs-lang      PRIVATE ${PARSER_DIR} ${SRC_DIR})
-target_include_directories(kfs_lang_test PRIVATE ${PARSER_DIR} ${SRC_DIR})
-target_include_directories(kfs_lang_pg   PRIVATE ${PARSER_DIR} ${SRC_DIR})
-
-target_link_libraries(kfs-lang      c)
-target_link_libraries(kfs_lang_test c)
-target_link_libraries(kfs_lang_pg   c)
+link_libraries(c)
 
 enable_testing()
 
 add_test(NAME test-1 COMMAND kfs_lang_test )
 add_test(NAME test-pg COMMAND kfs_lang_pg -v -i -e ../test/test.env -s pako -s pako2)
-add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:kfs-lang> -iv -e ../test/test.env < ../test/simple-test.kl" )
-add_test(NAME test-main2 COMMAND $<TARGET_FILE:kfs-lang> -iv -e ../test/test.env -s ../test/simple-test.kl -s ../test/simple-test-2.kl )
+add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}> -iv -e ../test/test.env < ../test/simple-test.kl" )
+add_test(NAME test-main2 COMMAND $<TARGET_FILE:${PROJECT_NAME}> -iv -e ../test/test.env -s ../test/simple-test.kl -s ../test/simple-test-2.kl )
+
+install(TARGETS ${PROJECT_NAME} DESTINATION usr/bin )
+
+include(CPack)
+set(CPACK_SOURCE_GENERATOR "TGZ")
+
+
