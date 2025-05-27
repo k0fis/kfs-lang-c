@@ -1,7 +1,8 @@
 #ifndef _json_h_
 #define _json_h_
 
-#include "rt/utils.h"
+#include "utils.h"
+#include "options.h"
 #include "value.h"
 #include "json_parser.h"
 #include "json_lexer.h"
@@ -11,7 +12,7 @@
 extern "C" {
 #endif
 
-int json_read_string(char *jsonStr, Value **output);
+int json_read_string(char *jsonStr, Value **output, Options *options);
 
 #if defined(__cplusplus)
 }

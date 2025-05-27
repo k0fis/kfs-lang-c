@@ -6,10 +6,10 @@
 
 #include "rt/options.h"
 
-int test_json(char *json) {
+int test_json(char *json, Options *opts) {
 
     Value *output;
-    int result = json_read_string(json, &output);
+    int result = json_read_string(json, &output, opts);
     if (result != 0) {
       return result;
     }
@@ -26,29 +26,17 @@ int test_json(char *json) {
     return 0;
 }
 
-void main_test_json() {
-    test_json("{}");
-    test_json("{ \"a\" : 1  }");
-    test_json("{ \"b\" : 1.9  }");
-    test_json("{ \"c\" : \"aaa\"  }");
-    test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41  }");
-    test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41, \"g\": [[[1, 2]], 1]  }");
-}
-
-void main_test_options(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
+    int res = RET_OK;
     Options *options;
     options_create(&options);
     options_fulfill(options, argc, argv);
-
+    res += test_json("{}", options);
+    res += test_json("{ \"a\" : 1  }", options);
+    res += test_json("{ \"b\" : 1.9  }", options);
+    res += test_json("{ \"c\" : \"aaa\"  }", options);
+    res += test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41  }", options);
+    res += test_json("{ \"d\" : \"aaa\", \"e\":12, \"f\":3.41, \"g\": [[[1, 2]], 1]  }", options);
     options_delete(options);
-}
-
-int main() {
-    Options *options;
-    options_create(&options);
-    options->verbose = TRUE;
-    int ret = env_load_file("../test/test.env", options);
-    options_delete(options);
-
-    return ret;
+    return res;
 }

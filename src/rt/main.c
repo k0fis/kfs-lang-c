@@ -1,11 +1,27 @@
 
 #include "kfs_lang_env.h"
 #include "utils.h"
+#include "options.h"
 #include "parser.h"
 #include "lexer.h"
 #include "env.h"
 #include "version.h"
-#include "rt/options.h"
+
+
+int eval_result(KfsLangEnv *env) {
+    Value *result = kfs_lang_eval_value(env, env->expression, KLE_EVAL_NORMAL);
+    if (result->type == FC_Return) {
+        result->type = List; // remove hack
+    }
+    result = value_delist(result);
+
+    char *valStr = value_to_string(result, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+    printf("%s\n", valStr);
+    free(valStr);
+
+    value_delete(result);
+    return RET_OK;
+}
 
 int main(int argc, char *argv[]) {
     yyscan_t scanner;
@@ -36,23 +52,31 @@ int main(int argc, char *argv[]) {
     }
     KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
-    // cycle scripts
-
-    if (yyparse(kfsLangEnv, scanner)) {
-        KFS_ERROR("Cannot parse code", NULL);
-        res = RET_CANNOT_PARSE_CODE_ERROR;
-    } else {
-        Value *result = kfs_lang_eval_value(kfsLangEnv, kfsLangEnv->expression, KLE_EVAL_NORMAL);
-        if (result->type == FC_Return) {
-            result->type = List; // remove hack
+    if (options->scripts.next != &options->scripts) {
+        list_for_each_entry_safe(inx, tmp, &options->scripts, handle) {
+            if (options->verbose) {
+                printf("run file: %s\n", inx->str);
+            }
+            FILE *file = fopen(inx->str, "r");
+            if (file == NULL) {
+                KFS_ERROR("Cannot open file %s\n", inx->str);
+                continue;
+            }
+            yyset_in(file, scanner);
+            if (yyparse(kfsLangEnv, scanner, options)) {
+                KFS_ERROR("Cannot parse ENV %s", inx->str);
+            } else {
+                eval_result(kfsLangEnv);
+            }
+            fclose(file);
         }
-        result = value_delist(result);
-
-        char *valStr = value_to_string(result, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
-        printf("%s\n", valStr);
-        free(valStr);
-
-        value_delete(result);
+    } else {
+        if (yyparse(kfsLangEnv, scanner, options)) {
+            KFS_ERROR("Cannot parse code", NULL);
+            res = RET_CANNOT_PARSE_CODE_ERROR;
+        } else {
+            eval_result(kfsLangEnv);
+        }
     }
     yylex_destroy(scanner);
     kfs_lang_env_delete(kfsLangEnv);

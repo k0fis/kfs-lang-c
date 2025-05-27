@@ -6,6 +6,7 @@
 #include "kfs_dict.h"
 #include "expression.h"
 #include "value.h"
+#include "options.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -63,7 +64,7 @@ char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode);
 #define KLE_EVAL_FCE_CALL 0x2
 
 Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e, int options);
-Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code);
+Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code, Options* options);
 
 #if defined(__cplusplus)
 }

@@ -1,11 +1,12 @@
 %{
 
+#include "options.h"
 #include "kfs_lang_env.h"
 #include "utils.h"
 #include "parser.h"
 #include "lexer.h"
 
-int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
+int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, Options* options, const char *msg);
 
 %}
 
@@ -17,6 +18,7 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, const char *msg);
 %lex-param   { yyscan_t scanner }
 %parse-param { KfsLangEnv *kfsLangEnv }
 %parse-param { yyscan_t scanner }
+%parse-param { Options * options }
 %define parse.error verbose
 
 %union {

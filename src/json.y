@@ -1,11 +1,12 @@
 %{
 
 #include "value.h"
+#include "options.h"
 #include "json_parser.h"
 #include "json_lexer.h"
 #include "utils.h"
 
-void zzerror(Value **output, yyscan_t scanner, const char *msg);
+void zzerror(Value **output, yyscan_t scanner, Options *options, const char *msg);
 
 %}
 
@@ -17,6 +18,7 @@ void zzerror(Value **output, yyscan_t scanner, const char *msg);
 %lex-param   { zzscan_t scanner }
 %parse-param { Value  **output  }
 %parse-param { zzscan_t scanner }
+%parse-param { Options * options }
 %define parse.error verbose
 
 %union {
@@ -66,6 +68,6 @@ a_members:                     { $$ = value_new_list(); }
 
 %%
 
-void zzerror(Value **output, yyscan_t scanner, const char *msg){
+void zzerror(Value **output, yyscan_t scanner, Options *options, const char *msg){
   KFS_ERROR("json-error: %s", msg);
 }

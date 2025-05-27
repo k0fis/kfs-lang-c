@@ -1,4 +1,5 @@
 #include "kfs_lang_env.h"
+#include "options.h"
 #include "parser.h"
 #include "lexer.h"
 
@@ -627,7 +628,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e, int options) {
   return NULL;
 }
 
-Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code) {
+Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code, Options* options) {
   yyscan_t scanner;
   YY_BUFFER_STATE state;
 
@@ -648,7 +649,7 @@ Value *kfs_lang_eval(KfsLangEnv *kfsLangEnv, char *code) {
     return NULL;
   }
   state = yy_scan_string(code, scanner);
-  if (yyparse(kfsLangEnv, scanner)) {
+  if (yyparse(kfsLangEnv, scanner, options)) {
     KFS_ERROR("Cannot parse code %s", code);
     return NULL;
   }

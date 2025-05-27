@@ -1,5 +1,6 @@
 %{
 #include "value.h"
+#include "options.h"
 #include "json_parser.h"
 #include "utils.h"
 extern void zzerror(const char *s);
