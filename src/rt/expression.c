@@ -1,5 +1,7 @@
 #include "expression.h"
 
+#include <math.h>
+
 Expression *expression_new(OperationType type) {
   KFS_MALLOC(Expression, expression);
   expression->type = type;
@@ -110,6 +112,13 @@ Expression *expression_create_break() {
 
 Expression *expression_create_continue() {
   Expression *expression = expression_new(eCONTI);
+  return expression;
+}
+
+Expression *expression_create_print(Expression *expr) {
+  Expression *expression = expression_new(ePRINT);
+  if (expression == NULL) return NULL;
+  expression->left = expr;
   return expression;
 }
 

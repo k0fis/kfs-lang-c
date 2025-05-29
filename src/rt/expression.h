@@ -15,7 +15,7 @@ typedef enum tagOperationType
     eLT, eLE, eEQ, eNE, eGT, eGE, eAND, eOR, eNOT, eUNARY_MINUS, // 12..21
     eDOT, eARRAY_ACCESS, eINT, eASSIGN_VAR, eVAR, eBLOCK, eIF, // 22.28
     eWHILE, eBREAK, eCONTI, eRETURN,  // 29..32
-    eFUNCTION_DEF, eFUNCTION_CALL, eIS_EMPTY, eSET_EMPTY // 33..36
+    eFUNCTION_DEF, eFUNCTION_CALL, eIS_EMPTY, eSET_EMPTY, ePRINT // 33..37
 } OperationType;
 
 typedef struct tagExpression {
@@ -52,6 +52,7 @@ Expression *expression_create_while(Expression *query, Expression *block);
 Expression *expression_create_break();
 Expression *expression_create_continue();
 Expression *expression_create_return(Expression *value);
+Expression *expression_create_print(Expression *expression);
 Expression *expression_create_function(char * name, Expression *value);
 Expression *expression_create_function_call(char * name, Expression *value);
 Expression *expression_create_variable_empty(char * name);

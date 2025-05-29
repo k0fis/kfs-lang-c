@@ -8,18 +8,24 @@
 #include "version.h"
 
 
-int eval_result(KfsLangEnv *env) {
+int eval_result(KfsLangEnv *env, Options *options) {
     Value *result = kfs_lang_eval_value(env, env->expression, KLE_EVAL_NORMAL);
-    if (result->type == FC_Return) {
-        result->type = List; // remove hack
+    if (result != NULL) {
+        int isReturn = FALSE;
+        if (result->type == FC_Return) {
+            result->type = List; // remove hack
+            isReturn = TRUE;
+        }
+        result = value_delist(result);
+
+        if (options->verbose || isReturn) {
+            char *valStr = value_to_string(result, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+            printf("%s\n", valStr);
+            free(valStr);
+        }
+
+        value_delete(result);
     }
-    result = value_delist(result);
-
-    char *valStr = value_to_string(result, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
-    printf("%s\n", valStr);
-    free(valStr);
-
-    value_delete(result);
     return RET_OK;
 }
 
@@ -60,7 +66,7 @@ int main(int argc, char *argv[]) {
             if (yyparse(kfsLangEnv, scanner, options)) {
                 KFS_ERROR("Cannot parse script: %s", inx->str);
             } else {
-                eval_result(kfsLangEnv);
+                res = eval_result(kfsLangEnv, options);
             }
             yy_delete_buffer(state, scanner);
         } else if (inx->mode == STR_LIST_MODE_FILE) {
@@ -75,7 +81,7 @@ int main(int argc, char *argv[]) {
                 if (yyparse(kfsLangEnv, scanner, options)) {
                     KFS_ERROR("Cannot parse script file %s", inx->str);
                 } else {
-                    eval_result(kfsLangEnv);
+                    res = eval_result(kfsLangEnv, options);
                 }
                 fclose(file);
             }
@@ -87,7 +93,7 @@ int main(int argc, char *argv[]) {
             if (yyparse(kfsLangEnv, scanner, options)) {
                 KFS_ERROR("Cannot parse code from stdin", NULL);
             } else {
-                eval_result(kfsLangEnv);
+                res = eval_result(kfsLangEnv, options);
             }
         }
         yylex_destroy(scanner);

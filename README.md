@@ -12,5 +12,4 @@ Todo:
  - add eval cmd - eval string as code
  - add json cmd - read json string into variable
  - add dump cmd - debug cmd for print actual state of env
- - add print cmd ?
  - 
