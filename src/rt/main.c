@@ -46,68 +46,53 @@ int main(int argc, char *argv[]) {
     }
     KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
 
-    list_for_each_entry_safe(inx, tmp, &options->scriptCodes, handle) {
-        if (options->verbose) {
-            printf("run code: %s\n", inx->str);
-        }
+    list_for_each_entry_safe(inx, tmp, &options->scripts, handle) {
         yyscan_t scanner;
         if (yylex_init(&scanner)) {
             KFS_ERROR("Cannot init yylex", NULL);
             return RET_CANNOT_INIT_LEX_ERROR;
         }
-        YY_BUFFER_STATE state = yy_scan_string(inx->str, scanner);
-        if (yyparse(kfsLangEnv, scanner, options)) {
-            KFS_ERROR("Cannot parse script: %s", inx->str);
-        } else {
-            eval_result(kfsLangEnv);
+        if (inx->mode == STR_LIST_MODE_SCRIPT) {
+            if (options->verbose) {
+                printf("run code: %s\n", inx->str);
+            }
+            YY_BUFFER_STATE state = yy_scan_string(inx->str, scanner);
+            if (yyparse(kfsLangEnv, scanner, options)) {
+                KFS_ERROR("Cannot parse script: %s", inx->str);
+            } else {
+                eval_result(kfsLangEnv);
+            }
+            yy_delete_buffer(state, scanner);
+        } else if (inx->mode == STR_LIST_MODE_FILE) {
+            if (options->verbose) {
+                printf("run file: %s\n", inx->str);
+            }
+            FILE *file = fopen(inx->str, "r");
+            if (file == NULL) {
+                KFS_ERROR("Cannot open file %s\n", inx->str);
+            } else {
+                yyset_in(file, scanner);
+                if (yyparse(kfsLangEnv, scanner, options)) {
+                    KFS_ERROR("Cannot parse script file %s", inx->str);
+                } else {
+                    eval_result(kfsLangEnv);
+                }
+                fclose(file);
+            }
+        } if (inx->mode == STR_LIST_MODE_STDIN) {
+            if (options->verbose) {
+                KFS_INFO("read code from stdin");
+            }
+            yyset_in(stdin, scanner);
+            if (yyparse(kfsLangEnv, scanner, options)) {
+                KFS_ERROR("Cannot parse code from stdin", NULL);
+            } else {
+                eval_result(kfsLangEnv);
+            }
         }
-        yy_delete_buffer(state, scanner);
         yylex_destroy(scanner);
         list_del(&inx->handle);
         str_list_delete(inx);
-    }
-    list_for_each_entry_safe(inx, tmp, &options->scriptFiles, handle) {
-        if (options->verbose) {
-            printf("run file: %s\n", inx->str);
-        }
-        FILE *file = fopen(inx->str, "r");
-        if (file == NULL) {
-            KFS_ERROR("Cannot open file %s\n", inx->str);
-            continue;
-        }
-        yyscan_t scanner;
-        if (yylex_init(&scanner)) {
-            KFS_ERROR("Cannot init yylex", NULL);
-            return RET_CANNOT_INIT_LEX_ERROR;
-        }
-        yyset_in(file, scanner);
-        if (yyparse(kfsLangEnv, scanner, options)) {
-            KFS_ERROR("Cannot parse script file %s", inx->str);
-        } else {
-            eval_result(kfsLangEnv);
-        }
-        fclose(file);
-        yylex_destroy(scanner);
-        list_del(&inx->handle);
-        str_list_delete(inx);
-    }
-    if (options->readFromStdIn) {
-        if (options->verbose) {
-            KFS_INFO("read code from stdin");
-        }
-        yyscan_t scanner;
-        if (yylex_init(&scanner)) {
-            KFS_ERROR("Cannot init yylex", NULL);
-            return RET_CANNOT_INIT_LEX_ERROR;
-        }
-        yyset_in(stdin, scanner);
-        if (yyparse(kfsLangEnv, scanner, options)) {
-            KFS_ERROR("Cannot parse code", NULL);
-            res = RET_CANNOT_PARSE_CODE_ERROR;
-        } else {
-            eval_result(kfsLangEnv);
-        }
-        yylex_destroy(scanner);
     }
     if (options->dumpEnv) {
         char * dump = kfs_lang_vars_to_string(kfsLangEnv, KLVTS_ALL_SPACES);

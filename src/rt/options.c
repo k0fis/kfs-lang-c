@@ -28,7 +28,7 @@ static struct option long_options[] =
 
 #define SHORT_OPTS "vrhds:f:e:i"
 
-int str_list_create(const char *str, StrList **lst) {
+int str_list_create(const char *str, StrList **lst, int mode) {
     KFS_MALLOC2(StrList, strList);
     if (strList == NULL) {
         return RET_ALLOC_ERROR;
@@ -39,6 +39,7 @@ int str_list_create(const char *str, StrList **lst) {
     } else {
         strList->str = NULL;
     }
+    strList->mode = mode;
     *lst = strList;
     return RET_OK;
 }
@@ -56,12 +57,10 @@ int options_create(Options **opts) {
     if (options == NULL) {
         return RET_ALLOC_ERROR;
     }
-    KFS_LST_INIT(options->scriptFiles);
+    KFS_LST_INIT(options->scripts);
     KFS_LST_INIT(options->envs);
-    KFS_LST_INIT(options->scriptCodes);
     options->printVersion = FALSE;
     options->verbose = FALSE;
-    options->readFromStdIn = FALSE;
     options->dumpEnv = FALSE;
     *opts = options;
     return RET_OK;
@@ -75,16 +74,15 @@ void options_list_delete(ll_t *lst) {
 }
 
 int options_delete(Options *opts) {
-    options_list_delete(&opts->scriptFiles);
+    options_list_delete(&opts->scripts);
     options_list_delete(&opts->envs);
-    options_list_delete(&opts->scriptCodes);
     free(opts);
     return RET_OK;
 }
 
-int options_lst_add(ll_t *list, const char *str) {
+int options_lst_add(ll_t *list, const char *str, int mode) {
     StrList *lst;
-    if (str_list_create(str, &lst) != RET_OK) {
+    if (str_list_create(str, &lst, mode) != RET_OK) {
         KFS_ERROR("Cannot add string into list", NULL);
         return RET_ALLOC_ERROR;
     }
@@ -92,23 +90,18 @@ int options_lst_add(ll_t *list, const char *str) {
     return RET_OK;
 }
 
-int options_scripts_add(Options *options, const char *str) {
-    return options_lst_add(&options->scriptFiles, str);
+int options_scripts_add(Options *options, const char *str, int mode) {
+    return options_lst_add(&options->scripts, str, mode);
 }
 
 int options_envs_add(Options *options, const char *str) {
-    return options_lst_add(&options->envs, str);
-}
-
-int options_code_add(Options *options, const char *str) {
-    return options_lst_add(&options->scriptCodes, str);
+    return options_lst_add(&options->envs, str, STR_LIST_MODE_NORMAL);
 }
 
 int options_fulfill(Options *options, const int argv, char **argc) {
-    int c;
     while (TRUE) {
       int option_index = 0;
-      c = getopt_long (argv, argc, SHORT_OPTS, long_options, &option_index);
+      int c = getopt_long (argv, argc, SHORT_OPTS, long_options, &option_index);
       /* Detect the end of the options. */
       if (c == -1) break;
       switch (c) {
@@ -119,11 +112,11 @@ int options_fulfill(Options *options, const int argv, char **argc) {
           break;
         case 'v': options->verbose = TRUE; break;
         case 'r': options->printVersion = TRUE; break;
-        case 'i': options->readFromStdIn = TRUE; break;
+        case 'i': options_scripts_add(options, NULL, STR_LIST_MODE_STDIN);; break;
         case 'd': options->dumpEnv = TRUE; break;
         case 'e': options_envs_add(options, optarg); break;
-        case 'f': options_scripts_add(options, optarg); break;
-        case 's': options_code_add(options, optarg); break;
+        case 'f': options_scripts_add(options, optarg, STR_LIST_MODE_FILE); break;
+        case 's': options_scripts_add(options, optarg, STR_LIST_MODE_SCRIPT); break;
         case '?':
         case 'h': fprintf(stderr, "Usage: %s %s\n", basename(argc[0]), USAGE); break;
         default: KFS_ERROR("Unknown option '%c'", c); break;
