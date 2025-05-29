@@ -1,16 +1,26 @@
 # kfs-lang-c
-simple script language in C for possible use in embedded systems. use bison/flex
+simple script language in C for possible use in embedded systems.
 
 
-Using
+## Using
+ - flex
+ - bison
+ - cmake - my Makefile is not compatibile with IDE ;-)
+ - clion ( Non-commercial use)
  - Header-only Linked List in C - https://github.com/embeddedartistry/c-linked-list
 
-I'm to lazy to learn howw to join other git repo, so I copy scr files and wrote info about it here.
-
-
-Todo:
+## Todo - plan to add:
+### kfs-lang features
  - add eval cmd - eval string as code
- - add json cmd - read json string into variable
+ - add json cmd - read json from string (into variable)
+ - add to_json - value convert into json
+ - load string from file
+ - save string into file
+
+### project improvements
+ - export into binary package
+ - create scripts for homebrew
+ - describe add expression
 
 ## Add command into kfs-lang
 1. add token in <i>parser.y</i> : <pre>%token TOKEN_DUMP     "dump"</pre>
