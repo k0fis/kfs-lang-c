@@ -61,7 +61,8 @@ add_test(NAME test-1 COMMAND kfs_lang_test )
 add_test(NAME test-pg COMMAND kfs_lang_pg -v -r -e ../test/test.env -s pako -s pako2)
 add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}> -irv -e ../test/test.env < ../test/simple-test.kl" )
 add_test(NAME test-main2 COMMAND $<TARGET_FILE:${PROJECT_NAME}> -vrd -e ../test/test.env -f ../test/simple-test.kl -f ../test/simple-test-2.kl -s "return \"ahoj {{USER}}\";")
-add_test(NAME test-main3 COMMAND $<TARGET_FILE:${PROJECT_NAME}> -s "a=1;" -s "a=a*100+2;"  -s "a=a*100+3;" -s "return a==10203;" -s "print (a);")
+add_test(NAME test-dump COMMAND $<TARGET_FILE:${PROJECT_NAME}> -s "a=1;" -s "dump;" -s "a=a*100+2;" -s "dump;" -s "a=a*100+3;" -s "return a==10203;" -s "dump; print (a);")
+
 
 install(TARGETS ${PROJECT_NAME} DESTINATION usr/bin )
 

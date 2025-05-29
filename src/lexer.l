@@ -69,6 +69,7 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "continue"  { return TOKEN_CONTI; }
 "return"    { return TOKEN_RETURN; }
 "print"     { return TOKEN_PRINT; }
+"dump"      { return TOKEN_DUMP; }
 "empty"     { return TOKEN_EMPTY; }
 {IDENT}     { strncpy(yylval->buffer, yytext, 1023); return TOKEN_IDENT; }
 {STRING}    { strncpy(yylval->buffer, yytext, 1023); return TOKEN_STR; }

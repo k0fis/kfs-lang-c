@@ -258,7 +258,8 @@ char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode) {
       free(tmp);
     }
   }
-  ret[strlen(ret)-2] = '>';
+  ret[strlen(ret)-2] = ' ';
+  ret[strlen(ret)-1] = '>';
   return ret;
 }
 
@@ -338,6 +339,7 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e, int options) {
   }
   Value *lv, *rv, *result;
   Expression *expr;
+  char *str;
 
   switch (e->type) {
     case eBREAK:
@@ -578,10 +580,15 @@ Value *kfs_lang_eval_value(KfsLangEnv *kfsLangEnv, Expression *e, int options) {
       return NULL;
     case ePRINT:
       lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);
-      char *str = value_to_string(lv, VALUE_TO_STRING_STR_DEFAULT);
+      str = value_to_string(lv, VALUE_TO_STRING_STR_DEFAULT);
       printf("%s",str);
       free(str);
       value_delete(lv);
+      return NULL;
+    case eDUMP:
+      str = kfs_lang_vars_to_string(kfsLangEnv, KLVTS_ALL_SPACES);
+      printf("%s\n",str);
+      free(str);
       return NULL;
     case eRETURN:
       lv = kfs_lang_eval_value(kfsLangEnv, e->left, KLE_EVAL_NORMAL);

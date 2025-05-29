@@ -62,6 +62,7 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, Options* options, const ch
 %token TOKEN_CONTI    "continue"
 %token TOKEN_RETURN   "return"
 %token TOKEN_PRINT    "print"
+%token TOKEN_DUMP     "dump"
 %token TOKEN_EMPTY    "empty"
 
 %token <lValue> TOKEN_NUMBER "number"
@@ -163,6 +164,7 @@ command
     | "while" "(" expr[Q] ")" inpt[B]   { $$ = expression_create_while($Q, $B); }
     | "break" ";"                       { $$ = expression_create_break(); }
     | "continue" ";"                    { $$ = expression_create_continue(); }
+    | "dump" ";"                        { $$ = expression_create_dump(); }
     | "print" "(" expr[Q] ")" ";"       { $$ = expression_create_print($Q); }
     | "return" expr_list[L] ";"         { $$ = expression_create_return($L); }
     | "ID"[N]"("")""{"inpt[C]"}"        { $$ = expression_create_function($N, $C); }

@@ -115,6 +115,11 @@ Expression *expression_create_continue() {
   return expression;
 }
 
+Expression *expression_create_dump() {
+  Expression *expression = expression_new(eDUMP);
+  return expression;
+}
+
 Expression *expression_create_print(Expression *expr) {
   Expression *expression = expression_new(ePRINT);
   if (expression == NULL) return NULL;
