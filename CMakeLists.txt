@@ -58,9 +58,9 @@ link_libraries(c)
 enable_testing()
 
 add_test(NAME test-1 COMMAND kfs_lang_test )
-add_test(NAME test-pg COMMAND kfs_lang_pg -v -i -e ../test/test.env -s pako -s pako2)
-add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}> -iv -e ../test/test.env < ../test/simple-test.kl" )
-add_test(NAME test-main2 COMMAND $<TARGET_FILE:${PROJECT_NAME}> -iv -e ../test/test.env -s ../test/simple-test.kl -s ../test/simple-test-2.kl )
+add_test(NAME test-pg COMMAND kfs_lang_pg -v -r -e ../test/test.env -s pako -s pako2)
+add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}> -irv -e ../test/test.env < ../test/simple-test.kl" )
+add_test(NAME test-main2 COMMAND $<TARGET_FILE:${PROJECT_NAME}> -vrd -e ../test/test.env -f ../test/simple-test.kl -f ../test/simple-test-2.kl -s "return \"ahoj {{USER}}\";")
 
 install(TARGETS ${PROJECT_NAME} DESTINATION usr/bin )
 
