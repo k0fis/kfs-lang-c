@@ -9,7 +9,7 @@
 
 
 int eval_result(KfsLangEnv *env, Options *options) {
-    Value *result = kfs_lang_eval_value(env, env->expression, KLE_EVAL_NORMAL);
+    Value *result = kfs_lang_eval_value(env, env->expression, KLE_EVAL_NORMAL, options);
     if (result != NULL) {
         int isReturn = FALSE;
         if (result->type == FC_Return) {
@@ -38,8 +38,18 @@ int main(int argc, char *argv[]) {
         options_delete(options);
         return res;
     }
-
-    if (options->printVersion) {
+    if (options->verbose) {
+        char *optString;
+        if ((res = options_to_string(options, &optString)) != RET_OK) {
+            KFS_ERROR("Cannot convert options into string!", NULL);
+        } else {
+            printf("arguments: %s\n", optString);
+        }
+        if (optString != NULL) {
+            free(optString);
+        }
+    }
+    if (options->printVersion || options->verbose) {
         printf("kfs-lang version %s\n", VERSION);
     }
     StrList *inx, *tmp; list_for_each_entry_safe(inx, tmp, &options->envs, handle) {

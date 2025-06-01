@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "kfs_dict.h"
+#include "options.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -59,6 +60,8 @@ Value *value_ge(Value *left, Value *right);
 Value *value_and(Value *left, Value *right);
 Value *value_or(Value *left, Value *right);
 Value *value_not(Value *left);
+
+int value_read_file(char *filename, Value **result, Options *options);
 
 #define VALUE_TO_STRING_STR_DEFAULT 0
 #define VALUE_TO_STRING_STR_WITH_APOSTROPHE 0x1

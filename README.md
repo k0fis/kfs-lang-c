@@ -11,11 +11,8 @@ simple script language in C for possible use in embedded systems.
 
 ## Todo - plan to add:
 ### kfs-lang features
- - add eval cmd - eval string as code
- - add json cmd - read json from string (into variable)
  - add to_json - value convert into json
- - load string from file
- - save string into file
+ - save string/value into file
 
 ### project improvements
  - export into binary package

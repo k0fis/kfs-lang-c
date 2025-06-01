@@ -22,6 +22,7 @@ typedef struct tag_Options {
     int printVersion;
     int verbose;
     int dumpEnv;
+    long maxReadFileLength;
 
     ll_t scripts;
     ll_t envs;
@@ -39,6 +40,7 @@ int options_code_add(Options *options, const char *str);
 
 int options_fulfill(Options *options, int argv, char **argc);
 
+int options_to_string(Options *options, char **result);
 
 
 #if defined(__cplusplus)

@@ -242,3 +242,47 @@ char *value_to_string(Value *value, int mode) {
   }
 }
 
+int value_read_file(char *filename, Value **result, Options *options) {
+  int ret;
+  FILE *file = fopen(filename, "r");
+  if (file == NULL) {
+    KFS_ERROR("Cannot open file %s", filename);
+    return RET_VALUE_CANNOT_OPEN_FILE;
+  }
+  long size = -1;
+  if ((ret=fseek(file, 0, SEEK_END))) {
+    KFS_ERROR("Cannot seek to end of file %s - %s", filename, strerror(ret));
+  } else {
+    size = ftell(file);
+    if ((ret = fseek(file, 0, SEEK_SET))) {
+      KFS_ERROR("Cannot seek to begin of file %s - %s", filename, strerror(ret));
+    }
+  }
+  if (size < 0) {
+    KFS_ERROR("Cannot read file %s - %s", filename, strerror(size));
+    fclose(file);
+    return RET_VALUE_CANNOT_OPEN_FILE;
+  }
+  if (size >= options->maxReadFileLength) {
+    KFS_ERROR("file %s has bigger size %ld than difined max: %ld", filename, size, options->maxReadFileLength);
+    fclose(file);
+    return RET_VALUE_FILE_OVERSIZED;
+  }
+  KFS_MALLOC_CHAR(str, size+1);
+  if (str == NULL) {
+    KFS_ERROR("Cannot allocate memory for file %s", filename);
+    fclose(file);
+    return RET_VALUE_FILE_NON_ALLOC;
+  }
+  size_t readed = fread (str, 1, size, file);
+  if (readed != size) {
+    KFS_ERROR("Cannot read full size fole: %s defined len: %ld, readed: %ld", filename, size, readed);
+  }
+  *result = value_new_string(str);
+  free(str);
+  if ((ret=fclose(file))) {
+    KFS_ERROR("Cannot close file %s - %s", filename, strerror(ret));
+    return RET_VALUE_CANNOT_CLOSE_FILE;
+  }
+  return RET_OK;
+}

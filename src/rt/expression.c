@@ -127,6 +127,28 @@ Expression *expression_create_print(Expression *expr) {
   return expression;
 }
 
+Expression *expression_create_json_operations(Expression *expr) {
+  Expression *expression = expression_new(eJSON);
+  if (expression == NULL) return NULL;
+  expression->left = expr;
+  return expression;
+}
+
+Expression *expression_create_eval_operations(Expression *expr) {
+  Expression *expression = expression_new(eEVAL);
+  if (expression == NULL) return NULL;
+  expression->left = expr;
+  return expression;
+}
+
+Expression *expression_create_read_operations(Expression *expr) {
+  Expression *expression = expression_new(eREAD_FILE);
+  if (expression == NULL) return NULL;
+  expression->left = expr;
+  return expression;
+}
+
+
 Expression *expression_create_return(Expression *value) {
   Expression *expression = expression_new(eRETURN);
   if (expression == NULL) return NULL;

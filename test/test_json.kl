@@ -1,0 +1,9 @@
+a = '{ \"a\" : 2 , \"pako\" : 3 }';
+
+print("a -> " + a);
+
+b = json(a);
+
+print("b -> "+ b );
+
+dump;

@@ -1,4 +1,7 @@
 #include "json.h"
+#include "utils.h"
+#include "json_parser.h"
+#include "json_lexer.h"
 
 int json_read_string(char *jsonStr, Value **output, Options *options) {
     zzscan_t scanner;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <memory.h>
 
 #include "ll/ll.h"
 
@@ -34,7 +35,7 @@ KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
   if (NULL == (ptr = malloc(sizeof(char)*(int)len))) { \
     KFS_ERROR("Failed to allocate memory for char(%i)", (int)len); \
   } else { \
-    ptr[0] = '\0';\
+    memset(ptr, 0, len); \
   } \
 
 #define KFS_LST_INIT(name) \
@@ -66,5 +67,9 @@ KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
 #define RET_ENV_CANNOT_INIT_SCANNER  -1007
 #define RET_ENV_CANNOT_PARSE_ENV     -1008
 #define RET_ENV_CANNOT_OPEN_FILE     -1009
+#define RET_VALUE_CANNOT_OPEN_FILE   -1010
+#define RET_VALUE_CANNOT_CLOSE_FILE  -1011
+#define RET_VALUE_FILE_OVERSIZED     -1012
+#define RET_VALUE_FILE_NON_ALLOC     -1013
 
 #endif

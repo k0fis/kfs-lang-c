@@ -70,6 +70,9 @@ STRING  ({STRING_SQ})|({STRING_DQ})
 "return"    { return TOKEN_RETURN; }
 "print"     { return TOKEN_PRINT; }
 "dump"      { return TOKEN_DUMP; }
+"json"      { return TOKEN_JSON; }
+"eval"      { return TOKEN_EVAL; }
+"readfile"  { return TOKEN_READ_FILE; }
 "empty"     { return TOKEN_EMPTY; }
 {IDENT}     { strncpy(yylval->buffer, yytext, 1023); return TOKEN_IDENT; }
 {STRING}    { strncpy(yylval->buffer, yytext, 1023); return TOKEN_STR; }

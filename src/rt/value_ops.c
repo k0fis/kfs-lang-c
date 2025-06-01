@@ -94,6 +94,14 @@ Value *value_plus(Value *left, Value *right) {
         free(ns);
         return ret;
       }
+      char * str = value_to_string(right, VALUE_TO_STRING_STR_DEFAULT);
+      KFS_MALLOC_CHAR(ns, (int)(strlen(str) + strlen(left->sValue)+1));
+      strcat(ns, left->sValue);
+      strcat(ns, str);
+      Value *ret = value_new_string(ns);
+      free(ns);
+      free(str);
+      return ret;
   }
   return NULL;
 }

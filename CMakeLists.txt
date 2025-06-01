@@ -7,6 +7,7 @@ find_package(Git QUIET)
 
 string(TIMESTAMP NOW "%Y-%m-%d_%H:%M:%S")
 execute_process(COMMAND git tag -fa ${PROJECT_VERSION} -m "tag ${PROJECT_VERSION} - ${NOW}" )
+execute_process(COMMAND git push origin tag -fa ${PROJECT_VERSION} )
 FILE(WRITE ${CMAKE_BINARY_DIR}/version.h
 			"\#define VERSION \"tag ${PROJECT_VERSION} compiled ${NOW}\"\n"
 )
@@ -62,6 +63,7 @@ add_test(NAME test-pg COMMAND kfs_lang_pg -v -r -e ../test/test.env -s pako -s p
 add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}> -irv -e ../test/test.env < ../test/simple-test.kl" )
 add_test(NAME test-main2 COMMAND $<TARGET_FILE:${PROJECT_NAME}> -vrd -e ../test/test.env -f ../test/simple-test.kl -f ../test/simple-test-2.kl -s "return \"ahoj {{USER}}\";")
 add_test(NAME test-dump COMMAND $<TARGET_FILE:${PROJECT_NAME}> -s "a=1;" -s "dump;" -s "a=a*100+2;" -s "dump;" -s "a=a*100+3;" -s "return a==10203;" -s "dump; print (a);")
+add_test(NAME test-json COMMAND $<TARGET_FILE:${PROJECT_NAME}> -s "a = json('[ 2, 3, 11, 0 ]'); print (a);" -f ../test/test_json.kl )
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION usr/bin )

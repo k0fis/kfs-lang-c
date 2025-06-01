@@ -63,7 +63,10 @@ int yyerror(KfsLangEnv *kfsLangEnv, yyscan_t scanner, Options* options, const ch
 %token TOKEN_RETURN   "return"
 %token TOKEN_PRINT    "print"
 %token TOKEN_DUMP     "dump"
-%token TOKEN_EMPTY    "empty"
+%token TOKEN_READ_FILE "readfile"
+%token TOKEN_JSON      "json"
+%token TOKEN_EVAL      "eval"
+%token TOKEN_EMPTY     "empty"
 
 %token <lValue> TOKEN_NUMBER "number"
 %token <dValue> TOKEN_DOUBLE "double"
@@ -127,6 +130,9 @@ expr
     | "[" expr_list[E] "]"   { $$ = $E; }
     | "{" named_list[E] "}"  { $$ = $E; }
     | "empty""(""ID"[N]")"   { $$ = expression_create_is_empty($N); }
+    | "json""("expr[E]")"    { $$ = expression_create_json_operations($E); }
+    | "eval""("expr[E]")"    { $$ = expression_create_eval_operations($E); }
+    | "readfile""("expr[E]")"{ $$ = expression_create_read_operations($E); }
     | expr[L] "." "ID"[N]    { $$ = expression_create_dot_operation($L, $N); }
     | "number"               { $$ = expression_create_integer($1); }
     | "double"               { $$ = expression_create_double($1); }
