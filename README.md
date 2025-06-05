@@ -13,6 +13,13 @@ simple script language in C for possible use in embedded systems.
 ### kfs-lang features
  - add to_json - value convert into json
  - save string/value into file
+ - libcurl get, post
+
+## Maybe future
+ - threads 
+   - https://www.geeksforgeeks.org/multithreading-in-c/ 
+   - https://www.geeksforgeeks.org/mutex-lock-for-linux-thread-synchronization/
+ - 
 
 ### project improvements
  - export into binary package

@@ -22,6 +22,9 @@ typedef struct tag_Options {
     int printVersion;
     int verbose;
     int dumpEnv;
+    int sslSkipPeerVerification;
+    int sslSkipHostnameVerification;
+
     long maxReadFileLength;
 
     ll_t scripts;

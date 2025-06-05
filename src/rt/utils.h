@@ -28,6 +28,7 @@
 type * ptr; \
 if (NULL == (ptr = malloc(sizeof(type)))) { \
 KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
+return RET_ALLOC_ERROR; \
 }\
 
 #define KFS_MALLOC_CHAR(ptr, len) \
@@ -71,5 +72,6 @@ KFS_ERROR("Failed to allocate memory (%i)", (int)sizeof(type)); \
 #define RET_VALUE_CANNOT_CLOSE_FILE  -1011
 #define RET_VALUE_FILE_OVERSIZED     -1012
 #define RET_VALUE_FILE_NON_ALLOC     -1013
+#define RET_NOT_IMPLEMENTED          -1014
 
 #endif
