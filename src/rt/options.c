@@ -6,22 +6,6 @@
 #define MAX_FILE_LENGTH__DEFAULT 10240
 #define OPTIONS_STRING_MAX_LEN    8192
 
-#define USAGE "[-i] [--version] [--verbose] [-h] [--dump] [-l max_file_read_length] [-e env_file] [-f script_file] [-s script]\n"\
-    "\t\t   --version\tprint version info\n" \
-    "\t\t   --verbose\tset verbose flag\n" \
-    "\t\t-i,--stdin\t\tread script code form standard input\n" \
-    "\t\t-h,--help\tprint usage\n" \
-    "\t\t-l,--read-max-file-length"\
-    "\t\t   --dump\tdump environment\n" \
-    "\t\t-e,--env\tread and set env variables from file\n" \
-    "\t\t-f,--file\tread code from file\n" \
-    "\t\t-s,--script\tscript code\n" \
-    "\t\t   --ssl_skip_peer_verification (default)" \
-    "\t\t   --ssl_peer_verification don't skipping ssl verification, more secure" \
-    "\t\t   --ssl_skip_hostname_verification (default)" \
-    "\t\t   --ssl_hostname_verification" \
-    ""
-
 int str_list_create(const char *str, StrList **lst, int mode) {
     KFS_MALLOC2(StrList, strList);
     if (strList == NULL) {
@@ -53,9 +37,9 @@ int options_create(Options **opts) {
     }
     KFS_LST_INIT(options->scripts);
     KFS_LST_INIT(options->envs);
-    options->printVersion = FALSE;
+    options->version = FALSE;
     options->verbose = FALSE;
-    options->dumpEnv = FALSE;
+    options->dump = FALSE;
     options->maxReadFileLength = MAX_FILE_LENGTH__DEFAULT;
     options->sslSkipPeerVerification = TRUE;
     options->sslSkipHostnameVerification = TRUE;
@@ -95,27 +79,138 @@ int options_envs_add(Options *options, const char *str) {
     return options_lst_add(&options->envs, str, STR_LIST_MODE_NORMAL);
 }
 
+char *options_help_lines(struct option *long_options, char *descs[]) {
+    KFS_MALLOC_CHAR(ret, 1);
+
+    for (int inx = 0; long_options[inx].name; inx++) {
+        unsigned long len = strlen(ret);
+        ret = realloc(ret, 1+len+11+strlen(long_options[inx].name) + strlen(descs[inx]));
+        strcat(ret, "\t\t");
+        len = strlen(ret);
+        if (long_options[inx].flag == NULL) {
+            ret[len++] = '-';
+            ret[len++] = (char)long_options[inx].val;
+            ret[len++] = ',';
+            ret[len++] = '\0';
+        } else {
+            strcat(ret, "   ");
+        }
+        strcat(ret,"--");
+        strcat(ret, long_options[inx].name);
+        len = strlen(ret);
+        ret[len++] = '\t';
+        ret[len++] = '\t';
+        ret[len++] = '\0';
+        strcat(ret, descs[inx]);
+        len = strlen(ret);
+        ret[len++] = '\n';
+        ret[len++] = '\0';
+    }
+
+    return ret;
+}
+
+char *options_help_line(struct option *long_options) {
+    KFS_MALLOC_CHAR(ret, 1);
+    unsigned long llen = 0;
+    for (int inx = 0; long_options[inx].name; inx++) {
+        unsigned long len = strlen(ret);
+        if (long_options[inx].flag == NULL) {
+            if (long_options[inx].has_arg == no_argument) {
+                llen += 1+len+5;
+                ret = realloc(ret, 1+len+5);
+                ret[len++] = '[';
+                ret[len++] = '-';
+                ret[len++] = (char)long_options[inx].val;
+                ret[len++] = ']';
+                ret[len++] = ' ';
+                ret[len++] = '\0';
+            } else {
+                llen += 1+len+6+strlen(long_options[inx].name);
+                ret = realloc(ret, 1+len+6+strlen(long_options[inx].name));
+                ret[len++] = '[';
+                ret[len++] = '-';
+                ret[len++] = (char)long_options[inx].val;
+                ret[len++] = ' ';
+                strcat(ret, long_options[inx].name);
+                len = strlen(ret);
+                ret[len++] = ']';
+                ret[len++] = ' ';
+                ret[len++] = '\0';
+            }
+        } else {
+            llen += 1+len+6+strlen(long_options[inx].name);
+            ret = realloc(ret, 1+len+6+strlen(long_options[inx].name));
+            strcat(ret, "[--");
+            len = strlen(ret);
+            strcat(ret, long_options[inx].name);
+            len = strlen(ret);
+            ret[len++] = ']';
+            ret[len++] = ' ';
+            ret[len++] = '\0';
+        }
+        if (llen > 390) {
+            llen = 0;
+            ret = realloc(ret, strlen(ret)+5);
+            strcat(ret, "\\\n\t\t");
+        }
+    }
+    return ret;
+}
+char *options_short_codes(struct option *long_options) {
+    int inx = 0; int retPos = 0;
+    KFS_MALLOC_CHAR(ret, 256);
+    while (long_options[inx].name) {
+        if (long_options[inx].flag == 0) {
+            ret[retPos] = (char)long_options[inx].val; retPos++;
+            if (long_options[inx].has_arg == required_argument) {
+                ret[retPos] = ':'; retPos++;
+            }
+        }
+        inx++;
+    }
+    return realloc(ret, retPos+1);
+}
+
+static char *optionsDef[] = {
+    "set verbose option",
+    "print version",
+    "\tdump environment",
+    "\tprint usage",
+    "\tscript code",
+    "\tread code from file",
+    "\tread and set env variables from file",
+    "\tread script code form standard input",
+    "\t\tmax file length for reading",
+    "\tskip peer verification",
+    "\t\tdo ssl peer verification",
+    "skip hostname verification",
+    "\tdo hostname verification",
+};
+
 int options_fulfill(Options *options, const int argv, char **argc) {
-    while (TRUE) {
-      int option_index = 0;
-      struct option long_options[] = {
+    struct option long_options[] = {
         {"verbose", no_argument,       &options->verbose,      TRUE},
-        {"version", no_argument,       &options->printVersion, TRUE},
-        {"dump",    no_argument,       &options->dumpEnv,      TRUE},
-        {"ssl_skip_peer_verification",     no_argument, &options->sslSkipPeerVerification, TRUE},
-        {"ssl_peer_verification",          no_argument, &options->sslSkipPeerVerification, FALSE},
-        {"ssl_skip_hostname_verification", no_argument, &options->sslSkipHostnameVerification, TRUE},
-        {"ssl_hostname_verification",      no_argument, &options->sslSkipHostnameVerification, FALSE},
+        {"version", no_argument,       &options->version, TRUE},
+        {"dump",    no_argument,       &options->dump,      TRUE},
         {"help",    no_argument,       0, 'h'},
         {"script",  required_argument, 0, 's'},
         {"file",    required_argument, 0, 'f'},
         {"env",     required_argument, 0, 'e'},
         {"stdin",   no_argument,       0, 'i'},
-        {"read-max-file-length", required_argument, 0, 'l'},
+        {"read_max_file_length", required_argument, 0, 'l'},
+        {"ssl_skip_peer_verification",     no_argument, &options->sslSkipPeerVerification, TRUE},
+        {"ssl_peer_verification",          no_argument, &options->sslSkipPeerVerification, FALSE},
+        {"ssl_skip_hostname_verification", no_argument, &options->sslSkipHostnameVerification, TRUE},
+        {"ssl_hostname_verification",      no_argument, &options->sslSkipHostnameVerification, FALSE},
         {0, 0, 0, 0}
-      };
-      int c = getopt_long (argv, argc, "s:f:e:i", long_options, &option_index);
-      /* Detect the end of the options. */
+    };
+
+    char *stLine; char *lines;
+    char *shorts = options_short_codes(long_options);
+    while (TRUE) {
+      int option_index = 0;
+      int c = getopt_long (argv, argc, shorts, long_options, &option_index);
       if (c == -1) break;
       switch (c) {
         case 0:
@@ -129,11 +224,17 @@ int options_fulfill(Options *options, const int argv, char **argc) {
         case 's': options_scripts_add(options, optarg, STR_LIST_MODE_SCRIPT); break;
         case 'l': options->maxReadFileLength = strtol(optarg, NULL, 10); break;
         case '?':
-        case 'h': fprintf(stderr, "Usage: %s %s\n", basename(argc[0]), USAGE); break;
+        case 'h':
+              stLine = options_help_line(long_options);
+              lines = options_help_lines(long_options, optionsDef);
+              fprintf(stderr, "Usage: %s %s\n\n%s\n", basename(argc[0]), stLine, lines);
+              free(stLine);
+              free(lines);
+              break;
         default: KFS_ERROR("Unknown option '%c'", c); break;
       }
     }
-
+    free(shorts);
     if (optind < argv) {
       printf ("non-option ARGV-elements: ");
       while (optind < argv)
@@ -147,14 +248,14 @@ int options_to_string(Options *options, char **result) {
     size_t len = OPTIONS_STRING_MAX_LEN;
     KFS_MALLOC_CHAR(ret, len);
     *result = ret;
-    if (options->printVersion) {
+    if (options->version) {
         strncat(ret, " --verbose", len);
     }
-    if (options->dumpEnv) {
-        strncat(ret, " -dump", len);
+    if (options->dump) {
+        strncat(ret, " --dump", len);
     }
     if (options->verbose) {
-        strncat(ret, " -version", len);
+        strncat(ret, " --version", len);
     }
     if (options->maxReadFileLength != MAX_FILE_LENGTH__DEFAULT) {
         size_t len0 = strlen(ret);

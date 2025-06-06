@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
             free(optString);
         }
     }
-    if (options->printVersion || options->verbose) {
+    if (options->version || options->verbose) {
         printf("kfs-lang version %s\n", VERSION);
     }
     StrList *inx, *tmp; list_for_each_entry_safe(inx, tmp, &options->envs, handle) {
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
         list_del(&inx->handle);
         str_list_delete(inx);
     }
-    if (options->dumpEnv) {
+    if (options->dump) {
         char * dump = kfs_lang_vars_to_string(kfsLangEnv, KLVTS_ALL_SPACES);
         printf("dump: %s\n\n", dump);
         free(dump);

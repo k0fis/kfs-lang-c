@@ -86,6 +86,7 @@ add_test(NAME test-main COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}> -i --verbo
 add_test(NAME test-main2 COMMAND $<TARGET_FILE:${PROJECT_NAME}> --version --verbose --dump -e ../test/test.env -f ../test/simple-test.kl -f ../test/simple-test-2.kl -s "return \"ahoj {{USER}}\";")
 add_test(NAME test-dump COMMAND $<TARGET_FILE:${PROJECT_NAME}> -s "a=1;" -s "dump;" -s "a=a*100+2;" -s "dump;" -s "a=a*100+3;" -s "return a==10203;" -s "dump; print (a);")
 add_test(NAME test-json COMMAND $<TARGET_FILE:${PROJECT_NAME}> -s "a = json('[ 2, 3, 11, 0 ]'); print (a);" -f ../test/test_json.kl )
+add_test(NAME test-help COMMAND $<TARGET_FILE:${PROJECT_NAME}> -h )
 
 
 install(TARGETS ${PROJECT_NAME} DESTINATION usr/bin )

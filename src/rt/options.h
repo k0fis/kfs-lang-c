@@ -19,9 +19,9 @@ typedef struct tag_StrList {
 } StrList;
 
 typedef struct tag_Options {
-    int printVersion;
+    int version;
     int verbose;
-    int dumpEnv;
+    int dump;
     int sslSkipPeerVerification;
     int sslSkipHostnameVerification;
 
