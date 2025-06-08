@@ -13,6 +13,7 @@
 #include "utils.h"
 
 #define CURL_CALL(var, res, msg) if ((var = res) != CURLE_OK) { KFS_ERROR("CURL error on %s: %s", msg, curl_easy_strerror(var));}
+#define CURL_CALL2(var, res, msg, msg2) if ((var = res) != CURLE_OK) { KFS_ERROR("CURL error on %s - %s: %s", msg, msg2, curl_easy_strerror(var));}
 
 int request_init() {
     CURLcode curlCode;
@@ -63,7 +64,7 @@ static size_t request_mem_write(void *contents, size_t size, size_t nmemb, void 
     return realsize;
 }
 
-int request_new(Request **request, char *url, Options *options) {
+int request_new(Request **request, char *url, const Options *options) {
     KFS_MALLOC2(Request, req);
     req->curl = curl_easy_init();
     req->url = NULL;
@@ -144,35 +145,30 @@ int request_post_perform(Request *req) {
     return RET_OK;
 }
 
-int request_get(Request *req) {
+int request_internal_do_request(Request *req, long curl_request_type, char *type_name ) {
     CURLcode curlCode;
     if (req->headers != NULL) {
         CURL_CALL(curlCode, curl_easy_setopt(req->curl, CURLOPT_HTTPHEADER, req->headers), "curl_easy_setopt(CURLOPT_HTTPHEADER)")
     }
-    CURL_CALL(curlCode, curl_easy_setopt(req->curl, CURLOPT_HTTPGET, 1L), "curl_easy_setopt(CURLOPT_HTTPGET)");
+    CURL_CALL2(curlCode, curl_easy_setopt(req->curl, curl_request_type, 1L), "curl_easy_setopt",  type_name)
     CURL_CALL(curlCode, curl_easy_perform(req->curl), "curl_easy_perform");
     if (curlCode != CURLE_OK) {
-        KFS_ERROR("curl_easy_perform failed", NULL);
+        KFS_ERROR("curl_easy_perform %s failed", type_name);
         return RET_REQUEST_GET_FAILED;
     }
     request_post_perform(req);
     return RET_OK;
 }
-
-int request_post(Request *req) {
-    CURLcode curlCode;
-    if (req->headers != NULL) {
-        CURL_CALL(curlCode, curl_easy_setopt(req->curl, CURLOPT_HTTPHEADER, req->headers), "curl_easy_setopt(CURLOPT_HTTPHEADER)")
-    }
-    CURL_CALL(curlCode, curl_easy_setopt(req->curl, CURLOPT_HTTPPOST, 1L), "curl_easy_setopt(CURLOPT_HTTPPOST)");
-
-    CURL_CALL(curlCode, curl_easy_perform(req->curl), "curl_easy_perform");
-    request_post_perform(req);
-    return RET_OK;
+int request_get(Request *req) {
+    return request_internal_do_request(req, CURLOPT_HTTPGET, "CURLOPT_HTTPGET");
 }
 
-int request_to_string(Request *req, char **output) {
-    char numberBuff[32]; char *ret2;
+int request_post(Request *req) {
+    return request_internal_do_request(req, CURLOPT_HTTPPOST, "CURLOPT_HTTPPOST");
+}
+
+int request_to_string(const Request *req, char **output) {
+    char numberBuff[32], *ret2;
     KFS_MALLOC_CHAR(ret, 1l
         +  5 +strlen(req->url) + 1
         +  8+2
@@ -232,7 +228,7 @@ int request_to_string(Request *req, char **output) {
 
     strcat(ret, "headers:\n");
     for (int inx = 0; inx < req->header_size; inx++) {
-        int sl_n = strlen(req->header_names[inx]);
+        unsigned long sl_n = strlen(req->header_names[inx]);
         ret2 = realloc(ret, 1+strlen(ret) + sl_n + 10 + strlen(req->header_values[inx]));
         if (ret2 == NULL) {
             KFS_ERROR("Out of memory", NULL);
@@ -272,7 +268,31 @@ int request_set_header(Request *req, int count, char **headers) {
     return RET_OK;
 }
 
-int request_to_value(Request *req, Value **output) {
+int request_to_value(const Request *req, Value **output) {
+    Value *value = value_new_object();
+    value_object_add(value, "secure", value_new_bool(req->secure==TRUE));
+    if (req->headers != NULL) {
+        Value *headers = value_new_list();
+        for (struct curl_slist *slist = req->headers; slist != NULL; slist = slist->next ) {
+            value_list_add(headers, value_new_string(slist->data));
+        }
+        value_object_add(value, "request_headers", headers);
+    }
+    value_object_add(value, "response_code", value_new_int((int)req->response_code));
+    value_object_add(value, "elapsed", value_new_double(req->elapsed));
+    value_object_add(value, "response", value_new_string(req->response));
+    value_object_add(value, "response_size", value_new_int((int)req->response_size));
+    value_object_add(value, "content_type", value_new_string(req->content_type));
+    value_object_add(value, "header_size", value_new_int((int)req->header_size));
+    value_object_add(value, "header_len", value_new_int((int)req->header_len));
 
+    if (req->header_size > 0) {
+        Value *headers = value_new_object();
+        for (int inx = 0; inx < req->header_size; inx++) {
+            value_object_add(headers, req->header_names[inx], value_new_string(req->header_values[inx]));
+        }
+        value_object_add(value, "response_headers", headers);
+    }
+    *output = value;
     return RET_OK;
 }

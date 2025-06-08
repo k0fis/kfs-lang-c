@@ -16,9 +16,9 @@ int request_cleanup() {
 }
 
 #define NI KFS_ERROR("Not implemented", NULL); return RET_NOT_IMPLEMENTED;
-int request_new(Request **r, char *url, Options *o)   { NI }
+int request_new(Request **r, char *url, const Options *o)   { NI }
 int request_delete(Request *req) { NI }
 int request_post(Request *req)   { NI }
 int request_get(Request *req)    { NI }
-int request_to_string(Request *req, char **output)    { NI }
-int request_to_value(Request *req, Value **output) {NI}
+int request_to_string(const Request *req, char **output)    { NI }
+int request_to_value(const Request *req, Value **output) {NI}

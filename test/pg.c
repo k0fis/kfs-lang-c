@@ -30,8 +30,15 @@ int main(int argc, char *argv[]) {
     KFS_INFO2("Request url: %s\n%s\n", url, result);
     free(result);
 
+    Value *val;
+    request_to_value(req, &val);
     request_cleanup();
 
+    result = value_to_string(val, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
+    KFS_INFO2("Request url: %s\n%s\n", url, result);
+    free(result);
+
+    value_delete(val);
 
     options_delete(options);
     return res;
