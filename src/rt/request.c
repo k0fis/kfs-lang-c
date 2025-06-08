@@ -287,9 +287,12 @@ int request_to_value(const Request *req, Value **output) {
     value_object_add(value, "header_len", value_new_int((int)req->header_len));
 
     if (req->header_size > 0) {
-        Value *headers = value_new_object();
+        Value *headers = value_new_list();
         for (int inx = 0; inx < req->header_size; inx++) {
-            value_object_add(headers, req->header_names[inx], value_new_string(req->header_values[inx]));
+            Value *header = value_new_object();
+            value_object_add(header, "name", value_new_string(req->header_names[inx]));
+            value_object_add(header, "value", value_new_string(req->header_values[inx]));
+            value_list_add(headers, header);
         }
         value_object_add(value, "response_headers", headers);
     }
