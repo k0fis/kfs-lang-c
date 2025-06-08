@@ -34,7 +34,7 @@ return RET_ALLOC_ERROR; \
 #define KFS_MALLOC_CHAR(ptr, len) \
   char * ptr; \
   if (NULL == (ptr = malloc(sizeof(char)*(int)len))) { \
-    KFS_ERROR("Failed to allocate memory for char(%i)", (int)len); \
+    KFS_ERROR("Failed to allocate memory for char(%ld)", len); \
   } else { \
     memset(ptr, 0, len); \
   } \
@@ -73,5 +73,7 @@ return RET_ALLOC_ERROR; \
 #define RET_VALUE_FILE_OVERSIZED     -1012
 #define RET_VALUE_FILE_NON_ALLOC     -1013
 #define RET_NOT_IMPLEMENTED          -1014
+#define RET_REQUEST_CANNOT_INIT      -1015
+#define RET_REQUEST_GET_FAILED       -1016
 
 #endif

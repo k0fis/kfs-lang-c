@@ -24,6 +24,7 @@ typedef struct tag_Options {
     int dump;
     int sslSkipPeerVerification;
     int sslSkipHostnameVerification;
+    int requestVerbose;
 
     long maxReadFileLength;
 

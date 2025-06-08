@@ -43,6 +43,7 @@ int options_create(Options **opts) {
     options->maxReadFileLength = MAX_FILE_LENGTH__DEFAULT;
     options->sslSkipPeerVerification = TRUE;
     options->sslSkipHostnameVerification = TRUE;
+    options->requestVerbose = FALSE;
     *opts = options;
     return RET_OK;
 }
@@ -186,6 +187,8 @@ static char *optionsDef[] = {
     "\t\tdo ssl peer verification",
     "skip hostname verification",
     "\tdo hostname verification",
+    "\tset libcurl verbose",
+    "set libcurl silent"
 };
 
 int options_fulfill(Options *options, const int argv, char **argc) {
@@ -203,6 +206,8 @@ int options_fulfill(Options *options, const int argv, char **argc) {
         {"ssl_peer_verification",          no_argument, &options->sslSkipPeerVerification, FALSE},
         {"ssl_skip_hostname_verification", no_argument, &options->sslSkipHostnameVerification, TRUE},
         {"ssl_hostname_verification",      no_argument, &options->sslSkipHostnameVerification, FALSE},
+        {"request_verbose", no_argument, &options->requestVerbose, TRUE},
+        {"request_non_verbose", no_argument, &options->requestVerbose, FALSE},
         {0, 0, 0, 0}
     };
 
