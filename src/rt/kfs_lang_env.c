@@ -42,7 +42,7 @@ int variables_set(Variables *kv, char *name, Value *value, int mode) {
 }
 
 char *variables_to_string(Variables *kv){
-  KFS_MALLOC_CHAR(ret,3);
+  KFS_MALLOC_CHAR(ret,3l);
   strcat(ret, "{ ");
   DictItem *inx; list_for_each_entry(inx, &kv->variables->lst, lst) {
     ret = realloc(ret, strlen(ret)+strlen(inx->name)+3);
@@ -119,7 +119,7 @@ int var_stack_set(VarStack *vs, char *name, Value *value) {
 }
 
 char *var_stack_to_string(VarStack *vs) {
-  KFS_MALLOC_CHAR(ret, 2);
+  KFS_MALLOC_CHAR(ret, 2l);
   strcat(ret, "[ ");
   Variables *inx; list_for_each_entry(inx, &vs->variablesStack, lstVs) {
     char *vStr = variables_to_string(inx);
@@ -241,7 +241,7 @@ void kfs_lang_set_var(KfsLangEnv *kfsLangEnv, char *name, Value *value) {
 char *kfs_lang_vars_to_string(KfsLangEnv *kfsLangEnv, int mode) {
   char *tmp;
   VarStack *inx;
-  KFS_MALLOC_CHAR(ret, 3);
+  KFS_MALLOC_CHAR(ret, 3l);
   strcat(ret, "< ");
   if (mode & KLVTS_ONLY_ACTUAL_SPACE) {
     inx = kfs_lang_env_actual_space(kfsLangEnv);
@@ -273,7 +273,7 @@ char *replace_system_props(regex_t regex, char *input) {
   result = regexec(&regex, input, 1, &match, 0);
   if (!result) {
     char *cursor = input;
-    KFS_MALLOC_CHAR(output, 1);
+    KFS_MALLOC_CHAR(output, 1l);
     while (match.rm_so >= 0) {
       int len1 = (int)(match.rm_so)+1;
       if (len1 > 1) {
@@ -281,10 +281,10 @@ char *replace_system_props(regex_t regex, char *input) {
         output = realloc(output, outlen + len1);
         snprintf(output+outlen, len1, "%.*s", len1-1, cursor);
       }
-      int outlen = strlen(output);
-      int nameLen = (int)(match.rm_eo - match.rm_so)-4 + 1;
+      size_t outlen = strlen(output);
+      long nameLen = (match.rm_eo - match.rm_so)-4 + 1;
       KFS_MALLOC_CHAR(name, nameLen);
-      snprintf(name, nameLen, "%.*s", nameLen-1, cursor+match.rm_so+2);
+      snprintf(name, nameLen, "%.*s", (int)nameLen-1, cursor+match.rm_so+2l);
       char *replace = getenv(name);
       //KFS_TRACE("name: '%s', replace: '%s'", name, replace);
       free(name);
@@ -293,7 +293,7 @@ char *replace_system_props(regex_t regex, char *input) {
         strcat(output, replace);
       } else {
         output = realloc(output, outlen + nameLen + 5);
-        sprintf(output+outlen,"{{%.*s}}", nameLen-1, cursor+match.rm_so+2);
+        sprintf(output+outlen,"{{%.*s}}", (int)nameLen-1, cursor+match.rm_so+2);
       }
 
       cursor += match.rm_eo;

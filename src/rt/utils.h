@@ -75,5 +75,22 @@ return RET_ALLOC_ERROR; \
 #define RET_NOT_IMPLEMENTED          -1014
 #define RET_REQUEST_CANNOT_INIT      -1015
 #define RET_REQUEST_GET_FAILED       -1016
+#define RET_THREAD_INIT_ATTR         -1017
+#define RET_THREAD_SETUP_STACK_ATTR  -1018
+#define RET_THREAD_CREATE_PTHREAD    -1019
+#define RET_THREAD_DESTROY_ATTR      -1020
+#define RET_THREAD_JOIN              -1021
+#define RET_CANNOT_INIT_MUTEX        -1022
+#define RET_CANNOT_DESTROY_MUTEX     -1023
+#define RET_CANNOT_LOCK_MUTEX        -1024
+#define RET_CANNOT_UNLOCK_MUTEX      -1025
+#define RET_CANNOT_CANCEL_THREAD     -1026
+#define RET_CANNOT_RUN_TIMER        -1027
+
+
+#define NI(name) KFS_ERROR("Not implemented: %s", name); return RET_NOT_IMPLEMENTED;
+
+#define check_error(var, call, msg, ret)  if ((var = call)) {KFS_ERROR("Error in call %s, %i", msg, var); return ret; }
+#define check_error2(var, call, msg)  if ((var = call)) {KFS_ERROR("Error in call %s, %i", msg, var); }
 
 #endif

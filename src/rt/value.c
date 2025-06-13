@@ -168,7 +168,7 @@ char *trim_str_buffer(char *buffer) {
 
 char *value_to_string(Value *value, int mode) {
   if (value == NULL) {
-    KFS_MALLOC_CHAR(tmp, 256);
+    KFS_MALLOC_CHAR(tmp, 256l);
     snprintf(tmp, 255, "NULL");
     return trim_str_buffer(tmp);
   } else {
@@ -182,17 +182,17 @@ char *value_to_string(Value *value, int mode) {
       case Empty:
         return strdup("");
       case Int: {
-        KFS_MALLOC_CHAR(tmp, 256);
+        KFS_MALLOC_CHAR(tmp, 256l);
         snprintf(tmp, 255, "%i", value->iValue);
         return trim_str_buffer(tmp);
       }
       case Double: {
-        KFS_MALLOC_CHAR(tmp, 256);
+        KFS_MALLOC_CHAR(tmp, 256l);
         snprintf(tmp, 255, "%lf", value->dValue);
         return trim_str_buffer(tmp);
       }
       case Bool: {
-        KFS_MALLOC_CHAR(tmp, 256);
+        KFS_MALLOC_CHAR(tmp, 256l);
         snprintf(tmp, 255, "%s", value->iValue?"true":"false");
         return trim_str_buffer(tmp);
       }
@@ -206,7 +206,7 @@ char *value_to_string(Value *value, int mode) {
         }
       }
       case List: {
-        KFS_MALLOC_CHAR(ret, 3);
+        KFS_MALLOC_CHAR(ret, 3l);
         strcat(ret, "[ ");
         Value *inx = NULL; list_for_each_entry(inx, &value->listValue, handle) {
           char *val = value_to_string(inx, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
@@ -222,7 +222,7 @@ char *value_to_string(Value *value, int mode) {
         return ret;
       }
       case Object: {
-        KFS_MALLOC_CHAR(ret,3);
+        KFS_MALLOC_CHAR(ret,3l);
         strcat(ret, "{ ");
         DictItem *inx; list_for_each_entry(inx, &value->oValue->lst, lst) {
           ret = realloc(ret, strlen(ret)+strlen(inx->name)+3);

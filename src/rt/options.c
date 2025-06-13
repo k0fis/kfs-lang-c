@@ -44,6 +44,7 @@ int options_create(Options **opts) {
     options->sslSkipPeerVerification = TRUE;
     options->sslSkipHostnameVerification = TRUE;
     options->requestVerbose = FALSE;
+    options->threadStackSize = -1;
     *opts = options;
     return RET_OK;
 }
@@ -81,7 +82,7 @@ int options_envs_add(Options *options, const char *str) {
 }
 
 char *options_help_lines(struct option *long_options, char *descs[]) {
-    KFS_MALLOC_CHAR(ret, 1);
+    KFS_MALLOC_CHAR(ret, 1l);
 
     for (int inx = 0; long_options[inx].name; inx++) {
         unsigned long len = strlen(ret);
@@ -112,7 +113,7 @@ char *options_help_lines(struct option *long_options, char *descs[]) {
 }
 
 char *options_help_line(struct option *long_options) {
-    KFS_MALLOC_CHAR(ret, 1);
+    KFS_MALLOC_CHAR(ret, 1l);
     unsigned long llen = 0;
     for (int inx = 0; long_options[inx].name; inx++) {
         unsigned long len = strlen(ret);
@@ -160,7 +161,7 @@ char *options_help_line(struct option *long_options) {
 }
 char *options_short_codes(struct option *long_options) {
     int inx = 0; int retPos = 0;
-    KFS_MALLOC_CHAR(ret, 256);
+    KFS_MALLOC_CHAR(ret, 256l);
     while (long_options[inx].name) {
         if (long_options[inx].flag == 0) {
             ret[retPos] = (char)long_options[inx].val; retPos++;
@@ -188,7 +189,8 @@ static char *optionsDef[] = {
     "skip hostname verification",
     "\tdo hostname verification",
     "\tset libcurl verbose",
-    "set libcurl silent"
+    "set libcurl silent",
+    "set thread stack"
 };
 
 int options_fulfill(Options *options, const int argv, char **argc) {
@@ -206,8 +208,9 @@ int options_fulfill(Options *options, const int argv, char **argc) {
         {"ssl_peer_verification",          no_argument, &options->sslSkipPeerVerification, FALSE},
         {"ssl_skip_hostname_verification", no_argument, &options->sslSkipHostnameVerification, TRUE},
         {"ssl_hostname_verification",      no_argument, &options->sslSkipHostnameVerification, FALSE},
-        {"request_verbose", no_argument, &options->requestVerbose, TRUE},
+        {"request_verbose",     no_argument, &options->requestVerbose, TRUE},
         {"request_non_verbose", no_argument, &options->requestVerbose, FALSE},
+        {"thread_stack_size",   required_argument, 0, 't' },
         {0, 0, 0, 0}
     };
 
@@ -228,6 +231,7 @@ int options_fulfill(Options *options, const int argv, char **argc) {
         case 'f': options_scripts_add(options, optarg, STR_LIST_MODE_FILE); break;
         case 's': options_scripts_add(options, optarg, STR_LIST_MODE_SCRIPT); break;
         case 'l': options->maxReadFileLength = strtol(optarg, NULL, 10); break;
+        case 't': options->threadStackSize = strtol(optarg, NULL, 10); break;
         case '?':
         case 'h':
               stLine = options_help_line(long_options);

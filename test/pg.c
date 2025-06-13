@@ -1,45 +1,34 @@
-#include "env.h"
+#include <stdio.h>
+#include <unistd.h>
+
+#include "thread.h"
+
+#include "options.h"
 #include "utils.h"
-#include "json.h"
-#include "request.h"
 
-#include "rt/options.h"
-
+int thread_check(void *arg) {
+    return  *((int *)arg) > 15;
+}
+void thread_start(void *arg) {
+    int *i = (int *)arg;
+    printf("value: %i\n", *i);
+    (*i) = *i +1;
+}
 
 int main(int argc, char *argv[]) {
     int res = RET_OK;
     Options *options;
+
     options_create(&options);
     options_fulfill(options, argc, argv);
-    if ((res = request_init()) != RET_OK) {
-        KFS_ERROR("Cannot initialize request", NULL);
-        return res;
-    }
 
-    char * url = "https://kofis.eu";
-    Request *req;
-    request_new(&req, url, options);
+    Timer *timer;
+    int inx = 0;
+    timer_create(&timer, 0, 500000, thread_start, thread_check, &inx);
 
-    if ((res = request_get(req)) != RET_OK) {
-        KFS_ERROR("Cannot get request %s", url);
-        return res;
-    }
-
-    char *result;
-    request_to_string(req, &result);
-    KFS_INFO2("Request url: %s\n%s\n", url, result);
-    free(result);
-
-    Value *val;
-    request_to_value(req, &val);
-    request_cleanup();
-
-    result = value_to_string(val, VALUE_TO_STRING_STR_WITH_APOSTROPHE);
-    KFS_INFO2("Request url: %s\n%s\n", url, result);
-    free(result);
-
-    value_delete(val);
-
+    sleep(5);
+    timer_delete(timer);
+    sleep(2);
     options_delete(options);
     return res;
 }

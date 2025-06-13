@@ -27,6 +27,7 @@ typedef struct tag_Options {
     int requestVerbose;
 
     long maxReadFileLength;
+    long threadStackSize;
 
     ll_t scripts;
     ll_t envs;

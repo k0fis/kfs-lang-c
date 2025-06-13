@@ -13,7 +13,7 @@
 #include "utils.h"
 
 #define CURL_CALL(var, res, msg) if ((var = res) != CURLE_OK) { KFS_ERROR("CURL error on %s: %s", msg, curl_easy_strerror(var));}
-#define CURL_CALL2(var, res, msg, msg2) if ((var = res) != CURLE_OK) { KFS_ERROR("CURL error on %s - %s: %s", msg, msg2, curl_easy_strerror(var));}
+#define CURL_CALL2(var, res, msg, msg2) if ((var = res) != CURLE_OK) { KFS_ERROR("CURL error on %s(%s): %s", msg, msg2, curl_easy_strerror(var));}
 
 int request_init() {
     CURLcode curlCode;

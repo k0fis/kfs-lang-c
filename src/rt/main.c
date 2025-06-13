@@ -6,6 +6,7 @@
 #include "lexer.h"
 #include "env.h"
 #include "version.h"
+#include "request.h"
 
 
 int eval_result(KfsLangEnv *env, Options *options) {
@@ -61,11 +62,12 @@ int main(int argc, char *argv[]) {
         str_list_delete(inx);
     }
     KfsLangEnv *kfsLangEnv = kfs_lang_env_new();
-
+    request_init();
     list_for_each_entry_safe(inx, tmp, &options->scripts, handle) {
         yyscan_t scanner;
         if (yylex_init(&scanner)) {
             KFS_ERROR("Cannot init yylex", NULL);
+            request_cleanup();
             return RET_CANNOT_INIT_LEX_ERROR;
         }
         if (inx->mode == STR_LIST_MODE_SCRIPT) {
@@ -115,6 +117,7 @@ int main(int argc, char *argv[]) {
         printf("dump: %s\n\n", dump);
         free(dump);
     }
+    request_cleanup();
     kfs_lang_env_delete(kfsLangEnv);
     options_delete(options);
     return res;

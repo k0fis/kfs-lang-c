@@ -76,6 +76,9 @@ add_executable(${PROJECT_NAME} ${SRC_DIR}/rt/main.c ${KFS_SOURCES})
 add_executable(kfs_lang_test   test/test.c          ${KFS_SOURCES})
 add_executable(kfs_lang_pg     test/pg.c            ${KFS_SOURCES})
 
+target_compile_definitions(kfs_lang_test PRIVATE TRACE DEBUG)
+target_compile_definitions(kfs_lang_pg PRIVATE  TRACE DEBUG)
+
 link_libraries(c)
 
 enable_testing()
